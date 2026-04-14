@@ -104,13 +104,40 @@ export default function App() {
   const [suPersonalName, setSuPersonalName] = useState('');
 
   // Profile states
-  const [profileName, setProfileName] = useState('MotoComando');
+  const [profileName, setProfileName] = useState('GOM');
   const [profilePhone, setProfilePhone] = useState('(11) 98765-4321');
   const [profileAddress, setProfileAddress] = useState('Av. Principal, 1000');
   const [profileLogo, setProfileLogo] = useState('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   useEffect(() => {
+    // Configurações para Atalho (PWA/Mobile)
+    document.title = "GOM";
+    const iconSvg = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62020'/><path d='M30 50 A20 20 0 1 1 70 50 L70 65 L45 65 L45 50 L60 50' fill='none' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/><path d='M50 45 L50 35 M45 40 L55 40' stroke='white' stroke-width='4' stroke-linecap='round'/></svg>`;
+    
+    const head = document.getElementsByTagName('head')[0];
+    
+    const linkIcon = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    linkIcon.type = 'image/svg+xml';
+    linkIcon.rel = 'shortcut icon';
+    linkIcon.href = iconSvg;
+    head.appendChild(linkIcon);
+
+    const appleIcon = document.createElement('link');
+    appleIcon.rel = 'apple-touch-icon';
+    appleIcon.href = iconSvg;
+    head.appendChild(appleIcon);
+
+    const metaMobile = document.createElement('meta');
+    metaMobile.name = "apple-mobile-web-app-title";
+    metaMobile.content = "GOM";
+    head.appendChild(metaMobile);
+
+    const metaCapable = document.createElement('meta');
+    metaCapable.name = "apple-mobile-web-app-capable";
+    metaCapable.content = "yes";
+    head.appendChild(metaCapable);
+
     const loadSupabase = () => {
       if (window.supabase) {
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -154,7 +181,7 @@ export default function App() {
       const safeId = getSafeUserId(session.user.id);
       const { data, error } = await supabase.from('profiles').select('*').eq('id', safeId).single();
       if (data) {
-        setProfileName(data.name || 'MotoComando');
+        setProfileName(data.name || 'GOM');
         setProfilePhone(data.phone || '(11) 98765-4321');
         setProfileAddress(data.address || 'Av. Principal, 1000');
         if (data.logo_url) setProfileLogo(data.logo_url);
@@ -357,7 +384,7 @@ export default function App() {
         <div className="w-full sm:max-w-[400px] h-full flex flex-col items-center relative z-10 px-8 pt-16 pb-10">
           <div className="text-center mb-10 anim-fade flex flex-col items-center">
             <h1 className="text-4xl font-black tracking-tight text-white uppercase font-poppins italic">
-              Moto<span className="text-[#e62020] not-italic">Comando</span>
+              G<span className="text-[#e62020] not-italic">OM</span>
             </h1>
             <p className="text-gray-400 text-[10px] uppercase tracking-[0.25em] mt-2 font-bold opacity-80">Gestão Inteligente para Oficinas</p>
           </div>
@@ -423,7 +450,7 @@ export default function App() {
         <aside className="hidden lg:flex w-72 bg-[#16181d]/95 backdrop-blur-md border-r border-zinc-800 flex-col shrink-0 shadow-2xl">
           <div className="px-6 py-10 border-b border-zinc-800/50 bg-[#1a1c23]/30">
             <h1 className="text-2xl font-black tracking-tight text-white uppercase font-poppins italic">
-              Moto<span className="text-[#e62020] not-italic">Comando</span>
+              G<span className="text-[#e62020] not-italic">OM</span>
             </h1>
             <p className="text-gray-500 text-[9px] uppercase tracking-[0.2em] mt-1 font-bold">Oficina de Alta Performance</p>
           </div>
@@ -530,12 +557,16 @@ export default function App() {
                 <div className="p-4 lg:px-0">
                   <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-4">Agenda</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-black/20 p-5 rounded-xl border border-zinc-800/50">
-                    {AGENDA_TODAY.map((item, idx) => (
-                      <div key={idx} className="flex items-center gap-4 text-gray-300 font-medium pb-3 border-b border-zinc-800/50 last:border-0 md:last:border-b">
-                        <span className="text-white font-bold w-12 text-[#e62020]">{item.time}</span>
-                        <span className="text-sm">{item.title}</span>
-                      </div>
-                    ))}
+                    {services.filter(s => s.status === 'Agendado').length > 0 ? (
+                      services.filter(s => s.status === 'Agendado').slice(0, 4).map((item, idx) => (
+                        <div key={idx} className="flex items-center gap-4 text-gray-300 font-medium pb-3 border-b border-zinc-800/50 last:border-0 md:last:border-b">
+                          <span className="text-white font-bold w-16 text-[#e62020] uppercase truncate">{item.deadline}</span>
+                          <span className="text-sm truncate">{item.bike} - {item.client}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="col-span-2 text-gray-500 text-xs italic py-2">Não há agendamentos reais registrados.</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -615,7 +646,7 @@ export default function App() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex z-50 anim-backdrop lg:hidden">
           <div className="w-72 bg-[#16181d] h-full shadow-2xl border-r border-zinc-800 flex flex-col anim-slide-in-left">
             <div className="flex justify-between items-center px-6 py-8 border-b border-zinc-800 bg-[#1a1c23]">
-              <h2 className="text-xl font-black text-white font-poppins uppercase tracking-wide text-[#e62020]">MotoComando</h2>
+              <h2 className="text-xl font-black text-white font-poppins uppercase tracking-wide text-[#e62020]">GOM</h2>
               <button onClick={() => setIsMenuOpen(false)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
             </div>
             <div className="flex flex-col py-6 gap-3 px-4 flex-1 overflow-y-auto">

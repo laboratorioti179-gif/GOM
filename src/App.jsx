@@ -113,26 +113,31 @@ export default function App() {
   useEffect(() => {
     // Configurações para Atalho (PWA/Mobile)
     document.title = "GOM";
-    const iconSvg = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62020'/><path d='M30 50 A20 20 0 1 1 70 50 L70 65 L45 65 L45 50 L60 50' fill='none' stroke='white' stroke-width='10' stroke-linecap='round' stroke-linejoin='round'/><path d='M50 45 L50 35 M45 40 L55 40' stroke='white' stroke-width='4' stroke-linecap='round'/></svg>`;
+    // Ícone criativo: G estilizado com traço grosso e um detalhe de engrenagem circular
+    const iconSvg = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62020'/><path d='M25 50 A25 25 0 1 1 75 50 L75 72 L40 72 L40 50 L62 50' fill='none' stroke='white' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/><circle cx='75' cy='28' r='7' fill='white'/></svg>`;
     
     const head = document.getElementsByTagName('head')[0];
     
+    // Favicon e Atalho Desktop
     const linkIcon = document.querySelector("link[rel*='icon']") || document.createElement('link');
     linkIcon.type = 'image/svg+xml';
     linkIcon.rel = 'shortcut icon';
     linkIcon.href = iconSvg;
     head.appendChild(linkIcon);
 
+    // Ícone para iPhone (Home Screen)
     const appleIcon = document.createElement('link');
     appleIcon.rel = 'apple-touch-icon';
     appleIcon.href = iconSvg;
     head.appendChild(appleIcon);
 
+    // Nome no atalho mobile
     const metaMobile = document.createElement('meta');
     metaMobile.name = "apple-mobile-web-app-title";
     metaMobile.content = "GOM";
     head.appendChild(metaMobile);
 
+    // Modo App no mobile
     const metaCapable = document.createElement('meta');
     metaCapable.name = "apple-mobile-web-app-capable";
     metaCapable.content = "yes";
@@ -378,62 +383,83 @@ export default function App() {
 
   if (!session) {
     return (
-      <div className="flex justify-center bg-[#12141a] h-screen w-full font-inter overflow-hidden relative">
-        <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-[#12141a]/90 via-[#12141a]/95 to-[#0a0b0e]"></div>
-        <div className="w-full sm:max-w-[400px] h-full flex flex-col items-center relative z-10 px-8 pt-16 pb-10">
-          <div className="text-center mb-10 anim-fade flex flex-col items-center">
-            <h1 className="text-4xl font-black tracking-tight text-white uppercase font-poppins italic">
-              G<span className="text-[#e62020] not-italic">OM</span>
-            </h1>
-            <p className="text-gray-400 text-[10px] uppercase tracking-[0.25em] mt-2 font-bold opacity-80">Gestão Inteligente para Oficinas</p>
+      <div className="flex justify-center bg-[#0a0a0a] h-screen w-full font-inter overflow-hidden relative">
+        {/* Background Gradients/Accents like the image */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-black via-[#0a0a0a] to-zinc-900"></div>
+        <div className="absolute -top-[10%] -left-[20%] w-[80%] h-[60%] bg-[#e62020]/10 blur-[120px] rounded-full rotate-45"></div>
+        <div className="absolute -bottom-[10%] -right-[20%] w-[80%] h-[60%] bg-[#e62020]/10 blur-[120px] rounded-full -rotate-45"></div>
+        
+        <div className="w-full sm:max-w-[400px] h-full flex flex-col items-center justify-center relative z-10 px-8">
+          {/* Logo Section */}
+          <div className="text-center mb-12 anim-fade flex flex-col items-center">
+             <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 bg-[#e62020] rounded-xl shadow-[0_0_20px_rgba(230,32,32,0.4)]">
+                   <Wrench className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-5xl font-black tracking-tighter text-white uppercase font-poppins italic">
+                  G<span className="not-italic">OM</span>
+                </h1>
+             </div>
+             <p className="text-[#e62020] text-lg uppercase tracking-[0.3em] font-black italic">PRIME</p>
           </div>
-          <div className="w-full overflow-y-auto custom-scrollbar pr-1 pb-4 flex flex-col gap-6 anim-slide-up flex-1 relative z-20">
-            <form onSubmit={handleLogin} className="w-full space-y-4">
+
+          {/* Form Card */}
+          <div className="w-full bg-[#161616] rounded-[45px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-zinc-800/50 anim-slide-up">
+            <form onSubmit={handleLogin} className="w-full space-y-5">
               {isSignUp && (
-                <div className="space-y-3">
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   <div className="relative">
-                    <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                    <input required type="text" value={suWorkshopName} onChange={(e) => setSuWorkshopName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="Nome da Oficina" />
+                    <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                    <input required type="text" value={suWorkshopName} onChange={(e) => setSuWorkshopName(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="Nome da Oficina" />
                   </div>
                   <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                    <input required type="text" value={suTaxId} onChange={(e) => setSuTaxId(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="CNPJ / CPF" />
+                    <FileText className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                    <input required type="text" value={suTaxId} onChange={(e) => setSuTaxId(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="CNPJ / CPF" />
                   </div>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                    <input required type="text" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="Telefone Comercial" />
+                    <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                    <input required type="text" value={suPhone} onChange={(e) => setSuPhone(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="Telefone" />
                   </div>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                    <input required type="text" value={suAddress} onChange={(e) => setSuAddress(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="Endereço Completo" />
-                  </div>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                    <input required type="text" value={suPersonalName} onChange={(e) => setSuPersonalName(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="Seu Nome (Responsável)" />
+                    <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                    <input required type="text" value={suAddress} onChange={(e) => setSuAddress(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="Endereço" />
                   </div>
                 </div>
               )}
+              
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                <input required type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="E-mail" />
+                <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <input required type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="E-mail" />
               </div>
+              
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#e62020]" />
-                <input required type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className="w-full bg-black/40 border border-zinc-800 rounded-xl pl-10 pr-10 py-3 text-white focus:outline-none focus:border-[#e62020] text-sm" placeholder="Senha" />
-                <Eye className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600" />
+                <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+                <input required type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} className="w-full bg-white text-black rounded-full pl-14 pr-6 h-14 text-sm font-medium focus:outline-none" placeholder="Senha" />
               </div>
-              {authError && <p className="text-[#e62020] text-xs text-center font-bold bg-red-900/10 py-3 rounded-lg border border-red-900/20">{authError}</p>}
-              <button disabled={isAuthLoading} type="submit" className="w-full h-16 bg-gradient-to-r from-[#e62020] to-[#b31212] hover:from-[#f02b2b] hover:to-[#c41515] text-white rounded-xl text-lg font-black transition-all shadow-[0_4px_20px_rgba(230,32,32,0.4)] font-poppins uppercase tracking-widest mt-4">
-                {isAuthLoading ? 'Processando...' : (isSignUp ? 'Criar já!' : 'Entrar no Sistema')}
+
+              <div className="flex justify-end pr-2">
+                 <button type="button" className="text-zinc-400 text-xs font-semibold hover:text-white transition-colors">Esqueceu a senha?</button>
+              </div>
+
+              {authError && (
+                <div className="bg-red-500/10 border border-red-500/20 py-3 px-4 rounded-2xl text-red-500 text-[11px] font-bold text-center">
+                  {authError}
+                </div>
+              )}
+
+              <button disabled={isAuthLoading} type="submit" className="w-full h-16 bg-[#e62020] hover:bg-[#ff2b2b] text-white rounded-full text-xl font-black transition-all shadow-[0_10px_30px_rgba(230,32,32,0.3)] font-poppins uppercase tracking-widest mt-4 active:scale-95">
+                {isAuthLoading ? 'Aguarde...' : 'ENTRAR'}
               </button>
+
+              <div className="text-center pt-4">
+                <p className="text-gray-400 text-xs font-semibold">
+                   {isSignUp ? 'Já possui uma conta?' : 'Não tem uma conta?'}
+                </p>
+                <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} className="text-white text-sm font-black uppercase tracking-wider mt-1 hover:text-[#e62020] transition-colors">
+                  {isSignUp ? 'Login' : 'Cadastre-se'}
+                </button>
+              </div>
             </form>
-            <div className="text-center mt-4 pb-20">
-              <p className="text-gray-400 text-xs font-bold">{isSignUp ? 'Já possui uma conta?' : 'Ainda não tem uma conta?'}</p>
-              <button type="button" onClick={() => { setIsSignUp(!isSignUp); setAuthError(''); }} className="text-[#e62020] text-xs font-black uppercase tracking-widest mt-2 hover:text-white transition-colors">
-                {isSignUp ? 'Fazer Login' : 'Criar já!'}
-              </button>
-            </div>
           </div>
         </div>
       </div>

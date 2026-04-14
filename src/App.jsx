@@ -113,35 +113,54 @@ export default function App() {
   useEffect(() => {
     // Configurações para Atalho (PWA/Mobile)
     document.title = "GOM";
-    // Ícone criativo: G estilizado com traço grosso e um detalhe de engrenagem circular
-    const iconSvg = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23e62020'/><path d='M25 50 A25 25 0 1 1 75 50 L75 72 L40 72 L40 50 L62 50' fill='none' stroke='white' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/><circle cx='75' cy='28' r='7' fill='white'/></svg>`;
     
-    const head = document.getElementsByTagName('head')[0];
+    // Criação do ícone em PNG a partir de SVG para compatibilidade com iOS/Safari
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512"><rect width="100" height="100" rx="22" fill="#e62020"/><g stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="65" r="12"/><circle cx="70" cy="65" r="12"/><path d="M30 65 L45 45 L65 45 L70 65"/><path d="M45 45 L35 32"/><path d="M65 45 L75 35 L85 35"/><path d="M35 32 L55 32 L65 45"/></g><circle cx="30" cy="65" r="4" fill="white"/><circle cx="70" cy="65" r="4" fill="white"/></svg>`;
     
-    // Favicon e Atalho Desktop
-    const linkIcon = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    linkIcon.type = 'image/svg+xml';
-    linkIcon.rel = 'shortcut icon';
-    linkIcon.href = iconSvg;
-    head.appendChild(linkIcon);
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      const pngUrl = canvas.toDataURL("image/png");
+      
+      const head = document.getElementsByTagName('head')[0];
+      
+      // Remover tags antigas se existirem para não duplicar
+      document.querySelectorAll("link[rel*='icon'], link[rel='apple-touch-icon']").forEach(e => e.remove());
+      
+      // Favicon e Atalho Desktop
+      const linkIcon = document.createElement('link');
+      linkIcon.type = 'image/png';
+      linkIcon.rel = 'shortcut icon';
+      linkIcon.href = pngUrl;
+      head.appendChild(linkIcon);
 
-    // Ícone para iPhone (Home Screen)
-    const appleIcon = document.createElement('link');
-    appleIcon.rel = 'apple-touch-icon';
-    appleIcon.href = iconSvg;
-    head.appendChild(appleIcon);
+      // Ícone para iPhone (Home Screen) - iOS precisa obrigatoriamente de PNG
+      const appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = pngUrl;
+      head.appendChild(appleIcon);
+    };
+    
+    img.src = "data:image/svg+xml;base64," + btoa(svgString);
+
+    const head = document.getElementsByTagName('head')[0];
 
     // Nome no atalho mobile
-    const metaMobile = document.createElement('meta');
+    const metaMobile = document.querySelector("meta[name='apple-mobile-web-app-title']") || document.createElement('meta');
     metaMobile.name = "apple-mobile-web-app-title";
     metaMobile.content = "GOM";
-    head.appendChild(metaMobile);
+    if (!metaMobile.parentNode) head.appendChild(metaMobile);
 
     // Modo App no mobile
-    const metaCapable = document.createElement('meta');
+    const metaCapable = document.querySelector("meta[name='apple-mobile-web-app-capable']") || document.createElement('meta');
     metaCapable.name = "apple-mobile-web-app-capable";
     metaCapable.content = "yes";
-    head.appendChild(metaCapable);
+    if (!metaCapable.parentNode) head.appendChild(metaCapable);
 
     const loadSupabase = () => {
       if (window.supabase) {
@@ -400,7 +419,6 @@ export default function App() {
                   G<span className="not-italic">OM</span>
                 </h1>
              </div>
-             <p className="text-[#e62020] text-lg uppercase tracking-[0.3em] font-black italic">PRIME</p>
           </div>
 
           {/* Form Card */}

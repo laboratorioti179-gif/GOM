@@ -418,7 +418,7 @@ export default function App() {
       <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&q=80&w=1600')] bg-cover bg-center"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/90"></div>
       
-      <div className="w-full h-full flex flex-row relative z-10 max-w-[1440px] mx-auto">
+      <div className="w-full h-full flex flex-row relative z-10 max-w-[1440px] mx-auto overflow-hidden">
         {/* Sidebar fixa para Desktop */}
         <aside className="hidden lg:flex w-72 bg-[#16181d]/95 backdrop-blur-md border-r border-zinc-800 flex-col shrink-0 shadow-2xl">
           <div className="px-6 py-10 border-b border-zinc-800/50 bg-[#1a1c23]/30">
@@ -440,7 +440,7 @@ export default function App() {
         </aside>
 
         {/* Container Principal que se adapta */}
-        <div className="flex-1 flex flex-col bg-[#0f1115]/90 backdrop-blur-sm relative overflow-hidden lg:border-l border-zinc-800 max-w-full sm:max-w-[480px] lg:max-w-none mx-auto lg:mx-0 shadow-2xl">
+        <div className="flex-1 flex flex-col bg-[#0f1115]/90 backdrop-blur-sm relative overflow-hidden lg:border-l border-zinc-800 w-full sm:max-w-[480px] lg:max-w-none mx-auto lg:mx-0 shadow-2xl">
           <header className="pt-8 pb-4 px-5 shrink-0 z-10 flex justify-between items-center bg-[#0f1115]/50 border-b border-zinc-800/30">
             <div className="flex items-center gap-3">
               <button onClick={() => setIsMenuOpen(true)} className="lg:hidden text-white hover:text-[#e62020] transition-colors active:scale-95">
@@ -450,7 +450,7 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               <div className="text-right flex items-center gap-3">
-                <p className="text-gray-300 text-sm font-medium">Oficina: <strong className="text-white">{profileName}</strong></p>
+                <p className="hidden sm:block text-gray-300 text-sm font-medium">Oficina: <strong className="text-white">{profileName}</strong></p>
                 <div className="relative">
                   <Bell className="w-5 h-5 text-gray-300" />
                   {delayedCount > 0 && (
@@ -474,7 +474,7 @@ export default function App() {
 
             {activeTab === 'inicio' && (
               <div className="anim-slide-up lg:py-8">
-                <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 mt-4">
                   <StatBox 
                     icon={<ClipboardList className="w-5 h-5" />} 
                     title="Todas" 
@@ -501,9 +501,9 @@ export default function App() {
                 <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0" />
                 <div className="p-4 lg:px-0 lg:mt-8">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Filtro do Painel: {homeFilter === 'todas' ? 'Todas' : homeFilter === 'agendados' ? 'Agendadas' : 'Em Produção'}</h2>
-                    <button onClick={() => setActiveTab('ordens')} className="text-sm text-gray-400 font-medium flex items-center hover:text-white transition-colors">
-                      Gerenciar O.S. <ChevronRight className="w-4 h-4 ml-0.5" />
+                    <h2 className="text-sm sm:text-lg font-black text-white uppercase tracking-wide font-poppins">Filtro: {homeFilter === 'todas' ? 'Todas' : homeFilter === 'agendados' ? 'Agendadas' : 'Em Produção'}</h2>
+                    <button onClick={() => setActiveTab('ordens')} className="text-[10px] sm:text-sm text-gray-400 font-medium flex items-center hover:text-white transition-colors uppercase tracking-widest">
+                      Gerenciar <ChevronRight className="w-4 h-4 ml-0.5" />
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -520,7 +520,7 @@ export default function App() {
                         ))
                       ) : (
                         <div className="md:col-span-2 bg-[#1c1e26] border border-dashed border-zinc-800 rounded-lg p-10 text-center text-gray-500 text-sm">
-                          Nenhuma ordem de serviço encontrada para este filtro.
+                          Nenhuma ordem de serviço encontrada.
                         </div>
                       );
                     })()}
@@ -528,7 +528,7 @@ export default function App() {
                 </div>
                 <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0 mt-8" />
                 <div className="p-4 lg:px-0">
-                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-4">Agenda de Compromissos</h2>
+                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-4">Agenda</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-black/20 p-5 rounded-xl border border-zinc-800/50">
                     {AGENDA_TODAY.map((item, idx) => (
                       <div key={idx} className="flex items-center gap-4 text-gray-300 font-medium pb-3 border-b border-zinc-800/50 last:border-0 md:last:border-b">
@@ -543,10 +543,10 @@ export default function App() {
 
             {activeTab === 'ordens' && (
               <div className="p-6 anim-slide-up lg:py-10 lg:px-0">
-                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-6">Controle de Ordens</h2>
+                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-6">Controle</h2>
                 <div className="relative mb-8 max-w-2xl">
                   <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <input type="text" placeholder="Buscar por cliente, moto ou placa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-4 bg-[#1a1c23] border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-[#e62020] transition-all shadow-lg" />
+                  <input type="text" placeholder="Buscar cliente, moto ou placa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-4 bg-[#1a1c23] border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-[#e62020] transition-all shadow-lg" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {services.filter(s => s.bike.toLowerCase().includes(searchTerm.toLowerCase()) || s.client.toLowerCase().includes(searchTerm.toLowerCase())).map((service) => (
@@ -558,7 +558,7 @@ export default function App() {
 
             {activeTab === 'perfil' && (
               <div className="p-6 anim-slide-up lg:py-10 lg:px-0 max-w-4xl">
-                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-8">Configurações da Oficina</h2>
+                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-8">Oficina</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <div className="lg:col-span-1 flex flex-col items-center justify-center p-8 bg-[#1c1e26] border border-zinc-800 rounded-2xl shadow-inner h-fit">
                     <label className="w-32 h-32 rounded-full border-4 border-[#e62020] p-1 mb-6 shadow-[0_0_30px_rgba(230,32,32,0.2)] cursor-pointer relative group block transition-transform hover:scale-105">
@@ -569,7 +569,7 @@ export default function App() {
                        <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                     </label>
                     <h3 className="text-xl font-bold text-white font-poppins uppercase text-center">{profileName}</h3>
-                    <p className="text-gray-500 text-xs mt-1">Logo da Empresa</p>
+                    <p className="text-gray-500 text-[10px] mt-1 font-bold uppercase tracking-widest">Logo da Oficina</p>
                   </div>
                   <div className="lg:col-span-2 space-y-5 bg-black/30 p-8 rounded-2xl border border-zinc-800/50">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -587,8 +587,8 @@ export default function App() {
                       <input type="text" value={profileAddress} onChange={(e) => setProfileAddress(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Endereço" />
                     </div>
                     <div className="pt-4 flex flex-col sm:flex-row gap-3">
-                      <button onClick={handleSaveProfile} className="flex-1 bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">{isSavingProfile ? 'Alterações Salvas!' : 'Salvar Dados'}</button>
-                      <button onClick={() => setSession(null)} className="lg:hidden bg-transparent border border-zinc-800 text-gray-400 py-4 px-6 rounded-xl text-sm font-black uppercase flex items-center justify-center gap-2 hover:bg-zinc-800/30"><LogOut className="w-4 h-4" /> Sair</button>
+                      <button onClick={handleSaveProfile} className="flex-1 bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">{isSavingProfile ? 'Salvo!' : 'Salvar Dados'}</button>
+                      <button onClick={() => setSession(null)} className="lg:hidden bg-transparent border border-zinc-800 text-gray-400 py-4 px-6 rounded-xl text-sm font-black uppercase flex items-center justify-center gap-2 hover:bg-zinc-800/30"><LogOut className="w-4 h-4 text-[#e62020]" /> Sair</button>
                     </div>
                   </div>
                 </div>
@@ -597,8 +597,8 @@ export default function App() {
           </main>
 
           <div className="bg-[#16181d] border-t border-zinc-900 py-4 flex justify-center shrink-0 z-20 shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
-            <button onClick={() => setIsModalOpen(true)} className="w-20 h-20 rounded-full bg-[#2a2d35] border-8 border-[#0a0a0c] flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:rotate-90 active:scale-95 group shadow-2xl" style={{ boxShadow: 'inset 0 0 0 3px #6b7280, 0 10px 20px rgba(0,0,0,0.5)' }}>
-              <div className="absolute inset-0 flex items-center justify-center opacity-80">
+            <button onClick={() => setIsModalOpen(true)} className="w-20 h-20 rounded-full bg-[#2a2d35] border-8 border-[#0a0a0c] flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:rotate-90 active:rotate-90 active:scale-95 group shadow-2xl touch-manipulation" style={{ boxShadow: 'inset 0 0 0 3px #6b7280, 0 10px 20px rgba(0,0,0,0.5)' }}>
+              <div className="absolute inset-0 flex items-center justify-center opacity-80 pointer-events-none">
                 {[0, 72, 144, 216, 288].map((angle, i) => (
                   <div key={i} className="absolute w-2.5 h-[50%] bg-[#8c919c] origin-bottom top-0 rounded-t-sm" style={{ transform: `rotate(${angle}deg)` }}></div>
                 ))}
@@ -637,12 +637,12 @@ export default function App() {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 anim-backdrop p-0 sm:p-4">
           <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[550px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[90vh] anim-slide-up">
             <div className="flex justify-between items-center px-6 py-5 border-b border-zinc-800 bg-[#1a1c23]/50">
-              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Gerenciamento de O.S.</h2>
+              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Gerenciar O.S.</h2>
               <button onClick={() => setSelectedService(null)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
             </div>
             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="bg-[#0f1115] border border-zinc-800/50 p-5 rounded-2xl shadow-inner">
-                <label className="block text-[10px] font-black text-gray-500 mb-3 uppercase tracking-widest">Progresso da Manutenção</label>
+                <label className="block text-[10px] font-black text-gray-500 mb-3 uppercase tracking-widest">Progresso</label>
                 <select value={selectedService.status} onChange={(e) => handleUpdateStatus(selectedService.id, e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-700 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-[#e62020] outline-none shadow-lg">
                   <option value="Agendado">Agendado</option>
                   <option value="Recebido">Recebido</option>
@@ -657,7 +657,7 @@ export default function App() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
                     <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Cliente</p>
-                    <p className="text-white font-bold">{selectedService.client}</p>
+                    <p className="text-white font-bold truncate">{selectedService.client}</p>
                   </div>
                   <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
                     <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Placa</p>
@@ -665,20 +665,20 @@ export default function App() {
                   </div>
                 </div>
                 <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
-                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Motocicleta</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Moto</p>
                   <p className="text-white font-bold">{selectedService.bike}</p>
                 </div>
                 <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
-                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Custo Estimado</p>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Estimativa</p>
                   <p className="text-green-500 font-black text-lg">R$ {selectedService.cost?.toFixed(2)}</p>
                 </div>
                 <div className="pt-2">
-                  <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block ml-1">Relatório Técnico / Problema</label>
-                  <div className="bg-[#0f1115] p-5 rounded-2xl text-white italic text-sm leading-relaxed border border-zinc-800/50">"{selectedService.issue}"</div>
+                  <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block ml-1">Relatório</label>
+                  <div className="bg-[#0f1115] p-5 rounded-2xl text-white italic text-xs leading-relaxed border border-zinc-800/50">"{selectedService.issue}"</div>
                 </div>
               </div>
-              <div className="pt-4">
-                <button onClick={() => setSelectedService(null)} className="w-full bg-zinc-800 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-zinc-700 transition-colors">Voltar</button>
+              <div className="pt-4 pb-2">
+                <button onClick={() => setSelectedService(null)} className="w-full bg-zinc-800 text-white py-4 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-zinc-700 transition-colors">Voltar</button>
               </div>
             </div>
           </div>
@@ -687,9 +687,9 @@ export default function App() {
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 anim-backdrop p-0 sm:p-4">
-          <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[600px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[90vh] anim-slide-up">
+          <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[600px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[95vh] anim-slide-up">
             <div className="flex justify-between items-center px-6 py-5 border-b border-zinc-800 bg-[#1a1c23]/50">
-              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Abertura de O.S.</h2>
+              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Abertura</h2>
               <button onClick={() => setIsModalOpen(false)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
             </div>
             <form onSubmit={handleCreateOS} className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
@@ -697,7 +697,7 @@ export default function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Proprietário</label>
-                    <input required type="text" value={newClient} onChange={(e) => setNewClient(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Nome completo" />
+                    <input required type="text" value={newClient} onChange={(e) => setNewClient(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Nome" />
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Placa</label>
@@ -705,25 +705,25 @@ export default function App() {
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Modelo da Moto</label>
-                  <input required type="text" list="motos-populares" value={newBike} onChange={(e) => setNewBike(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Ex: Hornet 600" />
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Moto</label>
+                  <input required type="text" list="motos-populares" value={newBike} onChange={(e) => setNewBike(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Modelo" />
                   <datalist id="motos-populares">{POPULAR_BIKES.map((bike, i) => <option key={i} value={bike} />)}</datalist>
                 </div>
                 
                 {newBike.length > 2 && (
-                  <div className="w-full h-32 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-inner">
-                    <img src={getBikeImage(newBike)} alt="Moto Selecionada" className="w-full h-full object-cover opacity-30 grayscale hover:grayscale-0 transition-all duration-700" />
+                  <div className="w-full h-24 sm:h-32 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-inner">
+                    <img src={getBikeImage(newBike)} alt="Moto" className="w-full h-full object-cover opacity-30 grayscale" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#16181d] to-transparent"></div>
-                    <div className="absolute bottom-4 left-4">
-                      <p className="text-[9px] font-black text-[#e62020] uppercase tracking-widest mb-1">Visualização Detectada</p>
-                      <p className="text-sm font-bold text-white uppercase tracking-wider">{newBike}</p>
+                    <div className="absolute bottom-2 left-4">
+                      <p className="text-[8px] font-black text-[#e62020] uppercase tracking-widest">Detectada</p>
+                      <p className="text-xs font-bold text-white uppercase truncate">{newBike}</p>
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Ocorrência / Sintomas</label>
-                  <textarea required value={newIssue} onChange={(e) => setNewIssue(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-4 text-white text-sm h-28 resize-none focus:border-[#e62020] outline-none leading-relaxed" placeholder="Descreva o que o cliente relatou ou o que foi diagnosticado..." />
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Ocorrência</label>
+                  <textarea required value={newIssue} onChange={(e) => setNewIssue(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-4 text-white text-sm h-24 sm:h-28 resize-none focus:border-[#e62020] outline-none leading-relaxed" placeholder="Relato do cliente..." />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -732,17 +732,17 @@ export default function App() {
                     <input required type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm [color-scheme:dark] outline-none focus:border-[#e62020]" />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Orçamento (R$)</label>
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Orçamento</label>
                     <input type="number" value={newCost} onChange={(e) => setNewCost(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-[#e62020]" placeholder="0,00" />
                   </div>
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Mecânico Responsável</label>
-                  <input type="text" value={newTech} onChange={(e) => setNewTech(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-[#e62020]" placeholder="Nome do técnico" />
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Mecânico</label>
+                  <input type="text" value={newTech} onChange={(e) => setNewTech(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-[#e62020]" placeholder="Nome" />
                 </div>
               </div>
-              <button type="submit" className="w-full bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-5 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all mt-4">Confirmar e Registrar O.S.</button>
+              <button type="submit" className="w-full bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-5 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all mt-4 mb-2">Registrar O.S.</button>
             </form>
           </div>
         </div>
@@ -750,6 +750,8 @@ export default function App() {
 
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap');
+        * { -webkit-tap-highlight-color: transparent; }
+        html, body { overflow: hidden; position: fixed; width: 100%; height: 100%; }
         .font-inter { font-family: 'Inter', sans-serif; }
         .font-poppins { font-family: 'Poppins', sans-serif; }
         .custom-scrollbar::-webkit-scrollbar { width: 5px; } 
@@ -764,6 +766,7 @@ export default function App() {
         @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
         @keyframes backdropFade { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(6px); } }
         .angled-badge { clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); }
+        select { appearance: none; -webkit-appearance: none; }
       `}} />
     </div>
   );
@@ -773,11 +776,11 @@ function StatBox({ icon, title, value, isActive, onClick }) {
   return (
     <button 
       onClick={onClick}
-      className={`bg-[#1c1e26]/60 backdrop-blur-md border rounded-2xl p-4 flex flex-col items-center justify-center text-center h-28 shadow-xl transition-all duration-300 ${isActive ? 'border-[#e62020] bg-black/40 scale-105 shadow-[#e62020]/10' : 'border-zinc-800 hover:border-zinc-600 hover:scale-[1.02]'}`}
+      className={`bg-[#1c1e26]/60 backdrop-blur-md border rounded-2xl p-2 sm:p-4 flex flex-col items-center justify-center text-center h-24 sm:h-28 shadow-xl transition-all duration-300 ${isActive ? 'border-[#e62020] bg-black/40 scale-105 shadow-[#e62020]/10' : 'border-zinc-800 hover:border-zinc-600 hover:scale-[1.02]'}`}
     >
-      <div className={`${isActive ? 'text-[#e62020]' : 'text-[#e62020] opacity-80'} mb-2`}>{icon}</div>
-      <p className={`text-[9px] font-black leading-tight font-inter uppercase tracking-wider ${isActive ? 'text-white' : 'text-gray-500'}`}>{title}</p>
-      <h3 className={`font-black text-lg font-poppins mt-1 ${isActive ? 'text-[#e62020]' : 'text-white'}`}>{value}</h3>
+      <div className={`${isActive ? 'text-[#e62020]' : 'text-[#e62020] opacity-80'} mb-1 sm:mb-2`}>{icon}</div>
+      <p className={`text-[8px] sm:text-[9px] font-black leading-tight font-inter uppercase tracking-wider ${isActive ? 'text-white' : 'text-gray-500'}`}>{title}</p>
+      <h3 className={`font-black text-sm sm:text-lg font-poppins mt-0.5 sm:mt-1 ${isActive ? 'text-[#e62020]' : 'text-white'}`}>{value}</h3>
     </button>
   );
 }
@@ -785,29 +788,29 @@ function StatBox({ icon, title, value, isActive, onClick }) {
 function ServiceCard({ service, getStatusStyle, onOpenDetails, onDelete }) {
   const styles = getStatusStyle(service.status);
   return (
-    <div className={`relative bg-gradient-to-br from-[#1c1e26] to-[#0a0b0d] rounded-2xl overflow-hidden border border-zinc-800/80 shadow-2xl ${styles.border} border-l-[6px] group transition-all hover:border-l-[#e62020] hover:shadow-[#000_0_20px_40px_-15px]`}>
+    <div className={`relative bg-gradient-to-br from-[#1c1e26] to-[#0a0b0d] rounded-2xl overflow-hidden border border-zinc-800/80 shadow-2xl ${styles.border} border-l-[6px] group transition-all hover:border-l-[#e62020]`}>
       <div className="absolute inset-y-0 right-0 w-3/4 bg-cover opacity-10 grayscale group-hover:opacity-20 group-hover:grayscale-0 transition-all duration-700 z-0" style={{ backgroundImage: `url(${service.image})` }}></div>
       <div className="absolute inset-0 bg-gradient-to-r from-[#1c1e26] via-[#1c1e26]/90 to-transparent z-0"></div>
       <div className="relative z-10 p-5 flex flex-col h-full justify-between gap-4">
         <div className="flex justify-between items-start gap-4">
-          <div className="flex-1">
-            <h3 className="font-black text-white text-sm font-poppins leading-tight line-clamp-2 uppercase tracking-tight group-hover:text-[#e62020] transition-colors">{service.issue}</h3>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-black text-white text-xs sm:text-sm font-poppins leading-tight line-clamp-2 uppercase tracking-tight group-hover:text-[#e62020] transition-colors">{service.issue}</h3>
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{service.bike}</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest truncate max-w-[100px]">{service.bike}</span>
               <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
-              <span className="text-[10px] text-[#e62020] font-black">{service.plate}</span>
+              <span className="text-[9px] sm:text-[10px] text-[#e62020] font-black">{service.plate}</span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {onDelete && <button onClick={() => onDelete(service.id)} className="bg-zinc-800/50 text-gray-500 hover:text-[#e62020] hover:bg-zinc-800 p-2 rounded-xl border border-zinc-700 transition-all active:scale-90"><Trash2 className="w-3.5 h-3.5" /></button>}
-            <button onClick={() => onOpenDetails(service)} className="bg-white text-black text-[9px] font-black uppercase px-3.5 py-2.5 rounded-xl shadow-lg hover:bg-[#e62020] hover:text-white transition-all active:scale-95">Gerenciar</button>
+            <button onClick={() => onOpenDetails(service)} className="bg-white text-black text-[8px] sm:text-[9px] font-black uppercase px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl shadow-lg hover:bg-[#e62020] hover:text-white transition-all active:scale-95">Gestão</button>
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-zinc-800/50 pt-3 mt-2">
-          <span className={`px-3 py-1 text-[8px] font-black uppercase angled-badge pr-5 ${styles.badge} shadow-md`}>{service.status}</span>
+          <span className={`px-2.5 sm:px-3 py-1 text-[7px] sm:text-[8px] font-black uppercase angled-badge pr-4 sm:pr-5 ${styles.badge} shadow-md`}>{service.status}</span>
           <div className="flex flex-col text-right">
-            <span className="text-[8px] text-gray-500 font-bold uppercase">Data de Entrada</span>
-            <span className="text-[10px] text-white font-black">{service.deadline}</span>
+            <span className="text-[7px] sm:text-[8px] text-gray-500 font-bold uppercase">Entrada</span>
+            <span className="text-[9px] sm:text-[10px] text-white font-black">{service.deadline}</span>
           </div>
         </div>
       </div>

@@ -115,7 +115,7 @@ export default function App() {
     document.title = "GOM";
     
     // Criação do ícone em PNG a partir de SVG para compatibilidade com iOS/Safari
-    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512"><rect width="100" height="100" rx="22" fill="#e62020"/><g stroke="white" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="30" cy="65" r="12"/><circle cx="70" cy="65" r="12"/><path d="M30 65 L45 45 L65 45 L70 65"/><path d="M45 45 L35 32"/><path d="M65 45 L75 35 L85 35"/><path d="M35 32 L55 32 L65 45"/></g><circle cx="30" cy="65" r="4" fill="white"/><circle cx="70" cy="65" r="4" fill="white"/></svg>`;
+    const svgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512"><rect width="100" height="100" rx="22" fill="#e62020"/><g transform="scale(3) translate(4.66, 4.66)" fill="white"><path d="M19 14.5c-1.3 0-2.43.83-2.82 2H15v-1c0-1.1-.9-2-2-2H9v-1h3c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2H8.5L7.15 2.3c-.22-.64-.85-1.05-1.54-1.05H2v2h3.61l1.35 4H4v2h4.51l.8 2.39c-.44.42-.71 1.01-.71 1.66 0 .58.21 1.11.56 1.52l-2.07 3.55C5.46 16.18 4.76 16 4 16c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.46-.08-.9-.23-1.3l2.25-3.86.32.22c.98.66 2.15 1.03 3.39 1.03 1.13 0 2.21-.32 3.16-.88L18.42 21h2.16l-3.36-5.83c.53-.49.88-1.2.88-1.99 0-1.46-1.18-2.65-2.64-2.65zM4 22c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm9.3-5.59c-.46-.31-1-.49-1.57-.49s-1.11.18-1.57.49l-.65-.43L9.67 15h3.11l.17.98-.65.43zM19 18c-.83 0-1.5-.67-1.5-1.5S18.17 15 19 15s1.5.67 1.5 1.5S19.83 18 19 18z"/></g></svg>`;
     
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -411,12 +411,13 @@ export default function App() {
           <div className="text-center mb-8 anim-fade flex flex-col items-center">
              <div className="flex items-center gap-2 mb-2">
                 <div className="p-1.5 bg-[#e62020] rounded-lg shadow-[0_0_15px_rgba(230,32,32,0.4)]">
-                   <Wrench className="w-5 h-5 text-white" />
+                   <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M19 14.5c-1.3 0-2.43.83-2.82 2H15v-1c0-1.1-.9-2-2-2H9v-1h3c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2H8.5L7.15 2.3c-.22-.64-.85-1.05-1.54-1.05H2v2h3.61l1.35 4H4v2h4.51l.8 2.39c-.44.42-.71 1.01-.71 1.66 0 .58.21 1.11.56 1.52l-2.07 3.55C5.46 16.18 4.76 16 4 16c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.46-.08-.9-.23-1.3l2.25-3.86.32.22c.98.66 2.15 1.03 3.39 1.03 1.13 0 2.21-.32 3.16-.88L18.42 21h2.16l-3.36-5.83c.53-.49.88-1.2.88-1.99 0-1.46-1.18-2.65-2.64-2.65zM4 22c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm9.3-5.59c-.46-.31-1-.49-1.57-.49s-1.11.18-1.57.49l-.65-.43L9.67 15h3.11l.17.98-.65.43zM19 18c-.83 0-1.5-.67-1.5-1.5S18.17 15 19 15s1.5.67 1.5 1.5S19.83 18 19 18z"/></svg>
                 </div>
                 <h1 className="text-4xl font-black tracking-tighter text-white uppercase font-poppins italic">
                   G<span className="not-italic">OM</span>
                 </h1>
              </div>
+             <p className="text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Gestão Administrativa</p>
           </div>
 
           <div className="w-full bg-[#161616] rounded-[32px] p-6 shadow-[0_15px_40px_rgba(0,0,0,0.5)] border border-zinc-800/50 anim-slide-up">

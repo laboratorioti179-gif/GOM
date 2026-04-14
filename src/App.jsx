@@ -70,8 +70,17 @@ const isValidUUID = (uuid) => {
   return !!match;
 };
 
+// Helper para garantir que o ID seja um UUID válido para o banco de dados
+const getSafeUserId = (id) => {
+  if (!id) return null;
+  if (isValidUUID(id)) return id;
+  const hex = String(id).replace(/[^0-9a-f]/g, '').padStart(12, '0').slice(-12);
+  return `00000000-0000-4000-a000-${hex}`;
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState('inicio');
+  const [homeFilter, setHomeFilter] = useState('todas');
   const [services, setServices] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -123,31 +132,27 @@ export default function App() {
     if (!supabase || !session) return;
     
     const fetchServices = async () => {
-      // Validar UUID para evitar erro de sintaxe 22P02 no Postgres
-      if (!isValidUUID(session.user.id)) {
-        console.warn("ID de usuário antigo detectado. Algumas funções de banco de dados podem falhar.");
-        setAuthError("Nota: Sua conta usa um formato antigo. Crie uma nova conta para salvar no banco de dados.");
-        return;
-      }
-
+      const safeId = getSafeUserId(session.user.id);
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', safeId)
         .order('created_at', { ascending: false });
       
       if (!error && data) {
         setServices(data);
       } else if (error) {
         console.error("Erro ao buscar serviços:", error.message);
+        if (error.code === "42501") {
+          setAuthError("Erro de Permissão: Ative a política RLS para 'SELECT' na tabela 'services' no painel do Supabase.");
+        }
       }
     };
     fetchServices();
 
     const fetchProfile = async () => {
-      if (!isValidUUID(session.user.id)) return;
-
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+      const safeId = getSafeUserId(session.user.id);
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', safeId).single();
       if (data) {
         setProfileName(data.name || 'MotoComando');
         setProfilePhone(data.phone || '(11) 98765-4321');
@@ -167,9 +172,9 @@ export default function App() {
   const [newTech, setNewTech] = useState('');
 
   const totalIncome = services.reduce((acc, curr) => curr.cost ? acc + curr.cost : acc, 0);
-  const activeOSCount = services.filter(s => !['Finalizado', 'Entregue'].includes(s.status)).length;
-  const pendingPartsCount = services.filter(s => s.status === 'Aguardando peças').length;
-  const doneCount = services.filter(s => ['Finalizado', 'Entregue'].includes(s.status)).length; 
+  const totalOSCount = services.length;
+  const scheduledCount = services.filter(s => s.status === 'Agendado').length;
+  const productionCount = services.filter(s => !['Agendado', 'Finalizado', 'Entregue'].includes(s.status)).length; 
 
   const delayedCount = services.filter(s => {
     if (['Finalizado', 'Entregue'].includes(s.status)) return false;
@@ -183,8 +188,8 @@ export default function App() {
   const handleCreateOS = async (e) => {
     e.preventDefault();
     
-    // Agora garantimos um UUID válido para o ID da Ordem de Serviço
     const newId = generateUUID(); 
+    const safeUserId = getSafeUserId(session.user.id);
     
     let formattedDeadline = "A definir";
     if (newDeadline) {
@@ -195,7 +200,7 @@ export default function App() {
 
     const newOS = {
       id: newId,
-      user_id: session.user.id,
+      user_id: safeUserId,
       client: newClient,
       bike: newBike.toUpperCase(),
       plate: newPlate.toUpperCase(),
@@ -209,23 +214,19 @@ export default function App() {
       created_at: new Date().toISOString()
     };
     
-    // Adiciona localmente para feedback imediato (Optimistic UI)
     setServices([newOS, ...services]);
     setIsModalOpen(false); 
 
     if (supabase) {
-      // Verificamos se o user_id é um UUID válido antes de tentar inserir
-      if (!isValidUUID(session.user.id)) {
-        console.error("Erro: user_id não é um UUID válido.");
-        setAuthError("Erro de formato: Seu ID de usuário é incompatível. Por favor, crie uma nova conta.");
-        return;
-      }
-
       const { error } = await supabase.from('services').insert([newOS]);
       if (error) {
         console.error("Erro ao salvar no Supabase:", error);
-        if (error.code === '22P02') {
-          setAuthError("Erro de compatibilidade: Sua conta possui um formato de ID antigo. Por favor, crie uma nova conta.");
+        if (error.code === "42501") {
+          setAuthError("Bloqueio de Segurança: Você precisa criar uma política RLS no Supabase permitindo 'INSERT' para usuários anônimos na tabela 'services'.");
+          setServices(prev => prev.filter(s => s.id !== newId));
+          setActiveTab('perfil'); 
+        } else if (error.code === "23503") {
+          setAuthError("Erro de Vínculo (23503): O banco de dados está tentando vincular a O.S. a um usuário inexistente na tabela 'users'. Execute: ALTER TABLE services DROP CONSTRAINT services_user_id_fkey; no Editor SQL do Supabase.");
           setServices(prev => prev.filter(s => s.id !== newId));
         }
       }
@@ -241,27 +242,41 @@ export default function App() {
       setSelectedService({ ...selectedService, status: newStatus });
     }
     if (supabase) {
-      await supabase.from('services').update({ status: newStatus }).eq('id', id);
+      const { error } = await supabase.from('services').update({ status: newStatus }).eq('id', id);
+      if (error) {
+        if (error.code === "42501") {
+          setAuthError("Erro de Permissão: Ative a política RLS para 'UPDATE' no painel do Supabase.");
+        } else if (error.code === "23503") {
+          setAuthError("Erro de Vínculo: Remova a restrição de chave estrangeira (FK) da coluna user_id na tabela services.");
+        }
+      }
     }
   };
 
   const handleDeleteOS = async (id) => {
     setServices(services.filter(s => s.id !== id));
     if (supabase) {
-      await supabase.from('services').delete().eq('id', id);
+      const { error } = await supabase.from('services').delete().eq('id', id);
+      if (error && error.code === "42501") {
+        setAuthError("Erro de Permissão: Ative a política RLS para 'DELETE' no painel do Supabase.");
+      }
     }
   };
 
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
+    const safeId = getSafeUserId(session.user.id);
     if (supabase && session) {
-      await supabase.from('profiles').upsert([{
-        id: session.user.id,
+      const { error } = await supabase.from('profiles').upsert([{
+        id: safeId,
         name: profileName,
         phone: profilePhone,
         address: profileAddress,
         logo_url: profileLogo
       }]);
+      if (error && error.code === "42501") {
+        setAuthError("Erro de RLS: Crie uma política no Supabase permitindo 'ALL' ou 'INSERT/UPDATE' na tabela 'profiles'.");
+      }
     }
     setTimeout(() => setIsSavingProfile(false), 2000);
   };
@@ -281,7 +296,6 @@ export default function App() {
     setAuthError('');
     if (supabase) {
       if (isSignUp) {
-        // Agora garantimos um UUID válido para o novo usuário
         const newUserId = generateUUID(); 
         const { data, error } = await supabase
           .from('profiles')
@@ -297,7 +311,11 @@ export default function App() {
           }])
           .select();
         if (error) {
-          setAuthError('Erro ao cadastrar: ' + error.message);
+          if (error.code === "42501") {
+            setAuthError('Erro RLS: A tabela profiles não permite inserções. Verifique as Políticas RLS no Supabase.');
+          } else {
+            setAuthError('Erro ao cadastrar: ' + error.message);
+          }
         } else {
           setAuthError('Cadastro realizado com sucesso! Faça login.');
           setIsSignUp(false);
@@ -416,7 +434,7 @@ export default function App() {
           </div>
           <div className="p-6 border-t border-zinc-800 bg-black/20">
             <button onClick={() => setSession(null)} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors font-bold uppercase text-[11px] tracking-widest">
-              <LogOut className="w-4 h-4 text-[#e62020]" /> Sair do Sistema
+              <LogOut className="w-4 h-4 text-[#e62020]" /> Sair
             </button>
           </div>
         </aside>
@@ -447,32 +465,65 @@ export default function App() {
           </header>
 
           <main className="flex-1 overflow-y-auto custom-scrollbar lg:px-8">
+            {authError && (
+              <div className="mx-4 mt-4 p-4 bg-red-900/20 border border-red-900/40 rounded-xl text-red-500 text-xs font-bold anim-slide-up">
+                ⚠️ {authError}
+                <button onClick={() => setAuthError('')} className="float-right text-white font-black uppercase ml-4">entendido</button>
+              </div>
+            )}
+
             {activeTab === 'inicio' && (
               <div className="anim-slide-up lg:py-8">
                 <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  <StatBox icon={<Wrench className="w-5 h-5" />} title="Ativas" value={activeOSCount} />
-                  <StatBox icon={<PackageSearch className="w-5 h-5" />} title="Peças" value={pendingPartsCount} />
-                  <StatBox icon={<CheckCircle2 className="w-5 h-5" />} title="Concluídos" value={doneCount} />
+                  <StatBox 
+                    icon={<ClipboardList className="w-5 h-5" />} 
+                    title="Todas" 
+                    value={totalOSCount} 
+                    isActive={homeFilter === 'todas'}
+                    onClick={() => setHomeFilter('todas')}
+                  />
+                  <StatBox 
+                    icon={<Calendar className="w-5 h-5" />} 
+                    title="Agendados" 
+                    value={scheduledCount} 
+                    isActive={homeFilter === 'agendados'}
+                    onClick={() => setHomeFilter('agendados')}
+                  />
+                  <StatBox 
+                    icon={<Wrench className="w-5 h-5" />} 
+                    title="Em produção" 
+                    value={productionCount} 
+                    isActive={homeFilter === 'producao'}
+                    onClick={() => setHomeFilter('producao')}
+                  />
                   <StatBox icon={<DollarSign className="w-5 h-5" />} title="Hoje" value={`R$ ${totalIncome}`} />
                 </div>
                 <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0" />
                 <div className="p-4 lg:px-0 lg:mt-8">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Ordens de Serviço Recentes</h2>
+                    <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Filtro do Painel: {homeFilter === 'todas' ? 'Todas' : homeFilter === 'agendados' ? 'Agendadas' : 'Em Produção'}</h2>
                     <button onClick={() => setActiveTab('ordens')} className="text-sm text-gray-400 font-medium flex items-center hover:text-white transition-colors">
-                      Ver Todas <ChevronRight className="w-4 h-4 ml-0.5" />
+                      Gerenciar O.S. <ChevronRight className="w-4 h-4 ml-0.5" />
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {services.length > 0 ? (
-                      services.slice(0, 4).map((service) => (
-                        <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} />
-                      ))
-                    ) : (
-                      <div className="md:col-span-2 bg-[#1c1e26] border border-dashed border-zinc-800 rounded-lg p-10 text-center text-gray-500 text-sm">
-                        Nenhuma ordem de serviço cadastrada no momento.
-                      </div>
-                    )}
+                    {(() => {
+                      const filtered = services.filter(s => {
+                        if (homeFilter === 'agendados') return s.status === 'Agendado';
+                        if (homeFilter === 'producao') return !['Agendado', 'Finalizado', 'Entregue'].includes(s.status);
+                        return true;
+                      });
+                      
+                      return filtered.length > 0 ? (
+                        filtered.slice(0, 8).map((service) => (
+                          <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} />
+                        ))
+                      ) : (
+                        <div className="md:col-span-2 bg-[#1c1e26] border border-dashed border-zinc-800 rounded-lg p-10 text-center text-gray-500 text-sm">
+                          Nenhuma ordem de serviço encontrada para este filtro.
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0 mt-8" />
@@ -574,7 +625,7 @@ export default function App() {
             </div>
             <div className="p-6 border-t border-zinc-800 bg-black/20">
               <button onClick={() => { setSession(null); setIsMenuOpen(false); }} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors font-bold uppercase text-[11px] tracking-widest">
-                <LogOut className="w-4 h-4 text-[#e62020]" /> Sair do Sistema
+                <LogOut className="w-4 h-4 text-[#e62020]" /> Sair
               </button>
             </div>
           </div>
@@ -677,7 +728,7 @@ export default function App() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Previsão de Entrega</label>
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Data de agendamento</label>
                     <input required type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm [color-scheme:dark] outline-none focus:border-[#e62020]" />
                   </div>
                   <div className="space-y-1">
@@ -718,13 +769,16 @@ export default function App() {
   );
 }
 
-function StatBox({ icon, title, value }) {
+function StatBox({ icon, title, value, isActive, onClick }) {
   return (
-    <div className="bg-[#1c1e26]/60 backdrop-blur-md border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center h-28 shadow-xl transition-transform hover:scale-[1.02]">
-      <div className="text-[#e62020] mb-2">{icon}</div>
-      <p className="text-[9px] text-gray-500 font-black leading-tight font-inter uppercase tracking-wider">{title}</p>
-      <h3 className="font-black text-white text-lg font-poppins mt-1">{value}</h3>
-    </div>
+    <button 
+      onClick={onClick}
+      className={`bg-[#1c1e26]/60 backdrop-blur-md border rounded-2xl p-4 flex flex-col items-center justify-center text-center h-28 shadow-xl transition-all duration-300 ${isActive ? 'border-[#e62020] bg-black/40 scale-105 shadow-[#e62020]/10' : 'border-zinc-800 hover:border-zinc-600 hover:scale-[1.02]'}`}
+    >
+      <div className={`${isActive ? 'text-[#e62020]' : 'text-[#e62020] opacity-80'} mb-2`}>{icon}</div>
+      <p className={`text-[9px] font-black leading-tight font-inter uppercase tracking-wider ${isActive ? 'text-white' : 'text-gray-500'}`}>{title}</p>
+      <h3 className={`font-black text-lg font-poppins mt-1 ${isActive ? 'text-[#e62020]' : 'text-white'}`}>{value}</h3>
+    </button>
   );
 }
 
@@ -752,7 +806,7 @@ function ServiceCard({ service, getStatusStyle, onOpenDetails, onDelete }) {
         <div className="flex items-center justify-between border-t border-zinc-800/50 pt-3 mt-2">
           <span className={`px-3 py-1 text-[8px] font-black uppercase angled-badge pr-5 ${styles.badge} shadow-md`}>{service.status}</span>
           <div className="flex flex-col text-right">
-            <span className="text-[8px] text-gray-500 font-bold uppercase">Prazo de Entrega</span>
+            <span className="text-[8px] text-gray-500 font-bold uppercase">Data de Entrada</span>
             <span className="text-[10px] text-white font-black">{service.deadline}</span>
           </div>
         </div>

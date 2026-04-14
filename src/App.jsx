@@ -399,223 +399,319 @@ export default function App() {
     <div className="flex justify-center bg-black h-screen w-full font-inter overflow-hidden relative">
       <div className="absolute inset-0 opacity-10 bg-[url('https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&q=80&w=1600')] bg-cover bg-center"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/90"></div>
-      <div className="w-full sm:max-w-[480px] bg-[#0f1115] h-full flex flex-col relative shadow-2xl overflow-hidden sm:border-x border-zinc-900 z-10">
-        <header className="pt-8 pb-4 px-5 shrink-0 z-10 flex justify-between items-center bg-[#0f1115]">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsMenuOpen(true)} className="text-white hover:text-[#e62020] transition-colors active:scale-95">
-              <Menu className="w-6 h-6" />
+      
+      <div className="w-full h-full flex flex-row relative z-10 max-w-[1440px] mx-auto">
+        {/* Sidebar fixa para Desktop */}
+        <aside className="hidden lg:flex w-72 bg-[#16181d]/95 backdrop-blur-md border-r border-zinc-800 flex-col shrink-0 shadow-2xl">
+          <div className="px-6 py-10 border-b border-zinc-800/50 bg-[#1a1c23]/30">
+            <h1 className="text-2xl font-black tracking-tight text-white uppercase font-poppins italic">
+              Moto<span className="text-[#e62020] not-italic">Comando</span>
+            </h1>
+            <p className="text-gray-500 text-[9px] uppercase tracking-[0.2em] mt-1 font-bold">Oficina de Alta Performance</p>
+          </div>
+          <div className="flex flex-col py-8 gap-3 px-4 flex-1 overflow-y-auto custom-scrollbar">
+            <SideMenuItem icon={<Home />} label="Início" isActive={activeTab === 'inicio'} onClick={() => setActiveTab('inicio')} />
+            <SideMenuItem icon={<ClipboardList />} label="Ordens de Serviço" isActive={activeTab === 'ordens'} onClick={() => setActiveTab('ordens')} />
+            <SideMenuItem icon={<Store />} label="Configurações da Loja" isActive={activeTab === 'perfil'} onClick={() => setActiveTab('perfil')} />
+          </div>
+          <div className="p-6 border-t border-zinc-800 bg-black/20">
+            <button onClick={() => setSession(null)} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors font-bold uppercase text-[11px] tracking-widest">
+              <LogOut className="w-4 h-4 text-[#e62020]" /> Sair do Sistema
             </button>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-right flex items-center gap-3">
-              <p className="text-gray-300 text-sm font-medium">Oficina: <strong className="text-white">{profileName}</strong></p>
-              <div className="relative">
-                <Bell className="w-5 h-5 text-gray-300" />
-                {delayedCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-[#e62020] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-[#0f1115] animate-pulse">
-                    {delayedCount}
-                  </span>
-                )}
-              </div>
-            </div>
-            <img src={profileLogo} alt="Profile" className="w-10 h-10 rounded-full border border-zinc-700 object-cover" />
-          </div>
-        </header>
+        </aside>
 
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
-          {activeTab === 'inicio' && (
-            <div className="anim-slide-up">
-              <div className="px-4 grid grid-cols-4 gap-2 mb-4">
-                <StatBox icon={<Wrench className="w-5 h-5" />} title="Ativas" value={activeOSCount} />
-                <StatBox icon={<PackageSearch className="w-5 h-5" />} title="Peças" value={pendingPartsCount} />
-                <StatBox icon={<CheckCircle2 className="w-5 h-5" />} title="Concluídos" value={doneCount} />
-                <StatBox icon={<DollarSign className="w-5 h-5" />} title="Hoje" value={`R$ ${totalIncome}`} />
-              </div>
-              <hr className="border-[#e62020] border-t-2 opacity-80" />
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Ordens de Serviço</h2>
-                  <button onClick={() => setActiveTab('ordens')} className="text-sm text-gray-400 font-medium flex items-center hover:text-white transition-colors">
-                    Ver Todas <ChevronRight className="w-4 h-4 ml-0.5" />
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {services.length > 0 ? (
-                    services.slice(0, 2).map((service) => (
-                      <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} />
-                    ))
-                  ) : (
-                    <div className="bg-[#1c1e26] border border-dashed border-zinc-800 rounded-lg p-6 text-center text-gray-500 text-sm">
-                      Nenhuma ordem de serviço cadastrada.
-                    </div>
+        {/* Container Principal que se adapta */}
+        <div className="flex-1 flex flex-col bg-[#0f1115]/90 backdrop-blur-sm relative overflow-hidden lg:border-l border-zinc-800 max-w-full sm:max-w-[480px] lg:max-w-none mx-auto lg:mx-0 shadow-2xl">
+          <header className="pt-8 pb-4 px-5 shrink-0 z-10 flex justify-between items-center bg-[#0f1115]/50 border-b border-zinc-800/30">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setIsMenuOpen(true)} className="lg:hidden text-white hover:text-[#e62020] transition-colors active:scale-95">
+                <Menu className="w-6 h-6" />
+              </button>
+              <h2 className="hidden lg:block text-white font-black uppercase text-sm tracking-widest font-poppins opacity-80">Painel Operacional</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right flex items-center gap-3">
+                <p className="text-gray-300 text-sm font-medium">Oficina: <strong className="text-white">{profileName}</strong></p>
+                <div className="relative">
+                  <Bell className="w-5 h-5 text-gray-300" />
+                  {delayedCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-[#e62020] text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-[#0f1115] animate-pulse">
+                      {delayedCount}
+                    </span>
                   )}
                 </div>
               </div>
-              <hr className="border-[#e62020] border-t-2 opacity-80" />
-              <div className="p-4">
-                <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-4">Agenda de Hoje</h2>
-                <div className="space-y-3 mb-6">
-                  {AGENDA_TODAY.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-4 text-gray-300 font-medium pb-3 border-b border-zinc-800/50 last:border-0">
-                      <span className="text-white font-bold w-12">{item.time}</span>
-                      <span className="text-sm">{item.title}</span>
-                    </div>
+              <img src={profileLogo} alt="Profile" className="w-10 h-10 rounded-full border border-zinc-700 object-cover shadow-lg" />
+            </div>
+          </header>
+
+          <main className="flex-1 overflow-y-auto custom-scrollbar lg:px-8">
+            {activeTab === 'inicio' && (
+              <div className="anim-slide-up lg:py-8">
+                <div className="px-4 grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                  <StatBox icon={<Wrench className="w-5 h-5" />} title="Ativas" value={activeOSCount} />
+                  <StatBox icon={<PackageSearch className="w-5 h-5" />} title="Peças" value={pendingPartsCount} />
+                  <StatBox icon={<CheckCircle2 className="w-5 h-5" />} title="Concluídos" value={doneCount} />
+                  <StatBox icon={<DollarSign className="w-5 h-5" />} title="Hoje" value={`R$ ${totalIncome}`} />
+                </div>
+                <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0" />
+                <div className="p-4 lg:px-0 lg:mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Ordens de Serviço Recentes</h2>
+                    <button onClick={() => setActiveTab('ordens')} className="text-sm text-gray-400 font-medium flex items-center hover:text-white transition-colors">
+                      Ver Todas <ChevronRight className="w-4 h-4 ml-0.5" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {services.length > 0 ? (
+                      services.slice(0, 4).map((service) => (
+                        <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} />
+                      ))
+                    ) : (
+                      <div className="md:col-span-2 bg-[#1c1e26] border border-dashed border-zinc-800 rounded-lg p-10 text-center text-gray-500 text-sm">
+                        Nenhuma ordem de serviço cadastrada no momento.
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <hr className="border-[#e62020] border-t-2 opacity-80 mx-4 lg:mx-0 mt-8" />
+                <div className="p-4 lg:px-0">
+                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-4">Agenda de Compromissos</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 mb-6 bg-black/20 p-5 rounded-xl border border-zinc-800/50">
+                    {AGENDA_TODAY.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-4 text-gray-300 font-medium pb-3 border-b border-zinc-800/50 last:border-0 md:last:border-b">
+                        <span className="text-white font-bold w-12 text-[#e62020]">{item.time}</span>
+                        <span className="text-sm">{item.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'ordens' && (
+              <div className="p-6 anim-slide-up lg:py-10 lg:px-0">
+                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-6">Controle de Ordens</h2>
+                <div className="relative mb-8 max-w-2xl">
+                  <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input type="text" placeholder="Buscar por cliente, moto ou placa..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-4 bg-[#1a1c23] border border-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:border-[#e62020] transition-all shadow-lg" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {services.filter(s => s.bike.toLowerCase().includes(searchTerm.toLowerCase()) || s.client.toLowerCase().includes(searchTerm.toLowerCase())).map((service) => (
+                    <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} onDelete={handleDeleteOS} />
                   ))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {activeTab === 'ordens' && (
-            <div className="p-6 anim-slide-up">
-              <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-4">Todas as Ordens</h2>
-              <div className="relative mb-6">
-                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input type="text" placeholder="Buscar por cliente ou moto..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-3 bg-[#1a1c23] border border-zinc-800 rounded-lg text-sm text-white focus:outline-none focus:border-[#e62020]" />
+            {activeTab === 'perfil' && (
+              <div className="p-6 anim-slide-up lg:py-10 lg:px-0 max-w-4xl">
+                <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-8">Configurações da Oficina</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-1 flex flex-col items-center justify-center p-8 bg-[#1c1e26] border border-zinc-800 rounded-2xl shadow-inner h-fit">
+                    <label className="w-32 h-32 rounded-full border-4 border-[#e62020] p-1 mb-6 shadow-[0_0_30px_rgba(230,32,32,0.2)] cursor-pointer relative group block transition-transform hover:scale-105">
+                       <img src={profileLogo} alt="Logo" className="w-full h-full rounded-full object-cover" />
+                       <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Box className="text-white w-6 h-6" />
+                       </div>
+                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+                    </label>
+                    <h3 className="text-xl font-bold text-white font-poppins uppercase text-center">{profileName}</h3>
+                    <p className="text-gray-500 text-xs mt-1">Logo da Empresa</p>
+                  </div>
+                  <div className="lg:col-span-2 space-y-5 bg-black/30 p-8 rounded-2xl border border-zinc-800/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Nome Fantasia</label>
+                        <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Nome" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Telefone Comercial</label>
+                        <input type="text" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Telefone" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Endereço Completo</label>
+                      <input type="text" value={profileAddress} onChange={(e) => setProfileAddress(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-xl px-4 py-3 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Endereço" />
+                    </div>
+                    <div className="pt-4 flex flex-col sm:flex-row gap-3">
+                      <button onClick={handleSaveProfile} className="flex-1 bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-4 rounded-xl text-sm font-black uppercase tracking-widest shadow-lg hover:brightness-110 transition-all">{isSavingProfile ? 'Alterações Salvas!' : 'Salvar Dados'}</button>
+                      <button onClick={() => setSession(null)} className="lg:hidden bg-transparent border border-zinc-800 text-gray-400 py-4 px-6 rounded-xl text-sm font-black uppercase flex items-center justify-center gap-2 hover:bg-zinc-800/30"><LogOut className="w-4 h-4" /> Sair</button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-4">
-                {services.filter(s => s.bike.toLowerCase().includes(searchTerm.toLowerCase()) || s.client.toLowerCase().includes(searchTerm.toLowerCase())).map((service) => (
-                  <ServiceCard key={service.id} service={service} getStatusStyle={getStatusStyle} onOpenDetails={setSelectedService} onDelete={handleDeleteOS} />
+            )}
+          </main>
+
+          <div className="bg-[#16181d] border-t border-zinc-900 py-4 flex justify-center shrink-0 z-20 shadow-[0_-5px_25px_rgba(0,0,0,0.6)]">
+            <button onClick={() => setIsModalOpen(true)} className="w-20 h-20 rounded-full bg-[#2a2d35] border-8 border-[#0a0a0c] flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:rotate-90 active:scale-95 group shadow-2xl" style={{ boxShadow: 'inset 0 0 0 3px #6b7280, 0 10px 20px rgba(0,0,0,0.5)' }}>
+              <div className="absolute inset-0 flex items-center justify-center opacity-80">
+                {[0, 72, 144, 216, 288].map((angle, i) => (
+                  <div key={i} className="absolute w-2.5 h-[50%] bg-[#8c919c] origin-bottom top-0 rounded-t-sm" style={{ transform: `rotate(${angle}deg)` }}></div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {activeTab === 'perfil' && (
-            <div className="p-6 anim-slide-up">
-              <h2 className="text-xl font-black text-white uppercase tracking-wide font-poppins mb-6">Configurações</h2>
-              <div className="flex flex-col items-center justify-center p-6 bg-[#1c1e26] border border-zinc-800 rounded-lg shadow-inner mb-6">
-                <label className="w-24 h-24 rounded-full border-2 border-[#e62020] p-1 mb-4 shadow-[0_0_15px_rgba(230,32,32,0.3)] cursor-pointer relative group block">
-                   <img src={profileLogo} alt="Logo" className="w-full h-full rounded-full object-cover" />
-                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
-                </label>
-                <h3 className="text-xl font-bold text-white font-poppins uppercase">{profileName}</h3>
+              <div className="w-10 h-10 bg-[#e62020] group-hover:bg-[#f02b2b] transition-colors rounded-full border-2 border-zinc-300 z-10 flex items-center justify-center">
+                <PlusCircle className="w-6 h-6 text-white shadow-lg" />
               </div>
-              <div className="space-y-4">
-                <input type="text" value={profileName} onChange={(e) => setProfileName(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Nome" />
-                <input type="text" value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Telefone" />
-                <input type="text" value={profileAddress} onChange={(e) => setProfileAddress(e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Endereço" />
-                <button onClick={handleSaveProfile} className="w-full bg-gradient-to-b from-[#e62020] to-[#b31212] text-white py-3.5 rounded-md text-sm font-black uppercase">{isSavingProfile ? 'Salvo!' : 'Salvar Alterações'}</button>
-                <button onClick={() => setSession(null)} className="w-full bg-transparent border border-zinc-800 text-gray-400 py-3.5 rounded-md text-sm font-black uppercase flex items-center justify-center gap-2"><LogOut className="w-4 h-4" /> Sair</button>
-              </div>
-            </div>
-          )}
-        </main>
-
-        <div className="bg-[#16181d] border-t border-zinc-900 py-4 flex justify-center shrink-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
-          <button onClick={() => setIsModalOpen(true)} className="w-20 h-20 rounded-full bg-[#2a2d35] border-8 border-[#0a0a0c] flex items-center justify-center relative overflow-hidden transition-all duration-500 hover:rotate-90 active:scale-95 group shadow-lg" style={{ boxShadow: 'inset 0 0 0 3px #6b7280, 0 4px 10px rgba(0,0,0,0.5)' }}>
-            <div className="absolute inset-0 flex items-center justify-center opacity-80">
-              {[0, 72, 144, 216, 288].map((angle, i) => (
-                <div key={i} className="absolute w-2.5 h-[50%] bg-[#8c919c] origin-bottom top-0 rounded-t-sm" style={{ transform: `rotate(${angle}deg)` }}></div>
-              ))}
-            </div>
-            <div className="w-10 h-10 bg-[#e62020] group-hover:bg-[#f02b2b] transition-colors rounded-full border-2 border-zinc-300 z-10 flex items-center justify-center">
-              <PlusCircle className="w-6 h-6 text-white" />
-            </div>
-          </button>
-        </div>
-
-        {isMenuOpen && (
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex z-50 anim-backdrop">
-            <div className="w-64 bg-[#16181d] h-full shadow-2xl border-r border-zinc-800 flex flex-col anim-slide-in-left">
-              <div className="flex justify-between items-center px-5 py-6 border-b border-zinc-800 bg-[#1a1c23]">
-                <h2 className="text-lg font-black text-white font-poppins uppercase tracking-wide text-[#e62020]">MotoComando</h2>
-                <button onClick={() => setIsMenuOpen(false)} className="text-gray-400 p-1 bg-zinc-800/50 rounded-md"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="flex flex-col py-4 gap-2 px-3 flex-1 overflow-y-auto">
-                <SideMenuItem icon={<Home />} label="Início" isActive={activeTab === 'inicio'} onClick={() => { setActiveTab('inicio'); setIsMenuOpen(false); }} />
-                <SideMenuItem icon={<ClipboardList />} label="Ordens" isActive={activeTab === 'ordens'} onClick={() => { setActiveTab('ordens'); setIsMenuOpen(false); }} />
-                <SideMenuItem icon={<Store />} label="Perfil" isActive={activeTab === 'perfil'} onClick={() => { setActiveTab('perfil'); setIsMenuOpen(false); }} />
-              </div>
-            </div>
-            <div className="flex-1" onClick={() => setIsMenuOpen(false)}></div>
+            </button>
           </div>
-        )}
+        </div>
+      </div>
 
-        {selectedService && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-50 anim-backdrop">
-            <div className="bg-[#16181d] rounded-t-2xl w-full sm:max-w-[480px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[85vh] anim-slide-up">
-              <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-800 bg-[#1a1c23]">
-                <h2 className="text-lg font-black text-white font-poppins uppercase tracking-wide">Gerenciar OS</h2>
-                <button onClick={() => setSelectedService(null)} className="text-gray-400 p-1 bg-zinc-800/50 rounded-md"><X className="w-5 h-5" /></button>
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex z-50 anim-backdrop lg:hidden">
+          <div className="w-72 bg-[#16181d] h-full shadow-2xl border-r border-zinc-800 flex flex-col anim-slide-in-left">
+            <div className="flex justify-between items-center px-6 py-8 border-b border-zinc-800 bg-[#1a1c23]">
+              <h2 className="text-xl font-black text-white font-poppins uppercase tracking-wide text-[#e62020]">MotoComando</h2>
+              <button onClick={() => setIsMenuOpen(false)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
+            </div>
+            <div className="flex flex-col py-6 gap-3 px-4 flex-1 overflow-y-auto">
+              <SideMenuItem icon={<Home />} label="Início" isActive={activeTab === 'inicio'} onClick={() => { setActiveTab('inicio'); setIsMenuOpen(false); }} />
+              <SideMenuItem icon={<ClipboardList />} label="Ordens de Serviço" isActive={activeTab === 'ordens'} onClick={() => { setActiveTab('ordens'); setIsMenuOpen(false); }} />
+              <SideMenuItem icon={<Store />} label="Configurações" isActive={activeTab === 'perfil'} onClick={() => { setActiveTab('perfil'); setIsMenuOpen(false); }} />
+            </div>
+            <div className="p-6 border-t border-zinc-800 bg-black/20">
+              <button onClick={() => { setSession(null); setIsMenuOpen(false); }} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors font-bold uppercase text-[11px] tracking-widest">
+                <LogOut className="w-4 h-4 text-[#e62020]" /> Sair do Sistema
+              </button>
+            </div>
+          </div>
+          <div className="flex-1" onClick={() => setIsMenuOpen(false)}></div>
+        </div>
+      )}
+
+      {selectedService && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 anim-backdrop p-0 sm:p-4">
+          <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[550px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[90vh] anim-slide-up">
+            <div className="flex justify-between items-center px-6 py-5 border-b border-zinc-800 bg-[#1a1c23]/50">
+              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Gerenciamento de O.S.</h2>
+              <button onClick={() => setSelectedService(null)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
+            </div>
+            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+              <div className="bg-[#0f1115] border border-zinc-800/50 p-5 rounded-2xl shadow-inner">
+                <label className="block text-[10px] font-black text-gray-500 mb-3 uppercase tracking-widest">Progresso da Manutenção</label>
+                <select value={selectedService.status} onChange={(e) => handleUpdateStatus(selectedService.id, e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-700 rounded-xl px-4 py-3.5 text-white text-sm font-bold focus:border-[#e62020] outline-none shadow-lg">
+                  <option value="Agendado">Agendado</option>
+                  <option value="Recebido">Recebido</option>
+                  <option value="Em diagnóstico">Em diagnóstico</option>
+                  <option value="Em andamento">Em andamento</option>
+                  <option value="Aguardando peças">Aguardando peças</option>
+                  <option value="Finalizado">Finalizado</option>
+                  <option value="Entregue">Entregue</option>
+                </select>
               </div>
-              <div className="p-5 space-y-5 overflow-y-auto custom-scrollbar">
-                <div className="bg-[#0f1115] border border-zinc-800 p-4 rounded-lg">
-                  <label className="block text-xs font-medium text-gray-400 mb-2 uppercase">Status Atual</label>
-                  <select value={selectedService.status} onChange={(e) => handleUpdateStatus(selectedService.id, e.target.value)} className="w-full bg-[#1a1c23] border border-zinc-700 rounded-md px-3 py-2 text-white text-sm">
-                    <option value="Agendado">Agendado</option>
-                    <option value="Recebido">Recebido</option>
-                    <option value="Em diagnóstico">Em diagnóstico</option>
-                    <option value="Em andamento">Em andamento</option>
-                    <option value="Aguardando peças">Aguardando peças</option>
-                    <option value="Finalizado">Finalizado</option>
-                    <option value="Entregue">Entregue</option>
-                  </select>
-                </div>
-                <div className="space-y-3 text-sm text-gray-300">
-                  <p className="flex justify-between border-b border-zinc-800 pb-2"><strong>Cliente:</strong> {selectedService.client}</p>
-                  <p className="flex justify-between border-b border-zinc-800 pb-2"><strong>Moto:</strong> {selectedService.bike}</p>
-                  <p className="flex justify-between border-b border-zinc-800 pb-2"><strong>Placa:</strong> {selectedService.plate}</p>
-                  <p className="flex justify-between border-b border-zinc-800 pb-2"><strong>Valor:</strong> R$ {selectedService.cost?.toFixed(2)}</p>
-                  <div className="pt-2">
-                    <p className="text-gray-400 mb-1">Problema relatado:</p>
-                    <div className="bg-[#0f1115] p-3 rounded text-white italic">{selectedService.issue}</div>
+              <div className="space-y-4 text-sm text-gray-300">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Cliente</p>
+                    <p className="text-white font-bold">{selectedService.client}</p>
+                  </div>
+                  <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Placa</p>
+                    <p className="text-[#e62020] font-black">{selectedService.plate}</p>
                   </div>
                 </div>
+                <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Motocicleta</p>
+                  <p className="text-white font-bold">{selectedService.bike}</p>
+                </div>
+                <div className="bg-black/20 p-4 rounded-xl border border-zinc-800/30">
+                  <p className="text-[10px] text-gray-500 font-bold uppercase mb-1">Custo Estimado</p>
+                  <p className="text-green-500 font-black text-lg">R$ {selectedService.cost?.toFixed(2)}</p>
+                </div>
+                <div className="pt-2">
+                  <label className="text-[10px] text-gray-500 font-bold uppercase mb-2 block ml-1">Relatório Técnico / Problema</label>
+                  <div className="bg-[#0f1115] p-5 rounded-2xl text-white italic text-sm leading-relaxed border border-zinc-800/50">"{selectedService.issue}"</div>
+                </div>
+              </div>
+              <div className="pt-4">
+                <button onClick={() => setSelectedService(null)} className="w-full bg-zinc-800 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-zinc-700 transition-colors">Voltar</button>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end justify-center z-50 anim-backdrop">
-            <div className="bg-[#16181d] rounded-t-2xl w-full sm:max-w-[480px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[85vh] anim-slide-up">
-              <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-800 bg-[#1a1c23]">
-                <h2 className="text-lg font-black text-white font-poppins uppercase tracking-wide">Nova OS</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 p-1 bg-zinc-800/50 rounded-md"><X className="w-5 h-5" /></button>
-              </div>
-              <form onSubmit={handleCreateOS} className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
-                <input required type="text" value={newClient} onChange={(e) => setNewClient(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Nome do Cliente" />
-                <div className="grid grid-cols-2 gap-3">
-                  <input required type="text" list="motos-populares" value={newBike} onChange={(e) => setNewBike(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Moto" />
-                  <datalist id="motos-populares">{POPULAR_BIKES.map((bike, i) => <option key={i} value={bike} />)}</datalist>
-                  <input required type="text" value={newPlate} onChange={(e) => setNewPlate(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm uppercase" placeholder="Placa" maxLength={8} />
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 anim-backdrop p-0 sm:p-4">
+          <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[600px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[90vh] anim-slide-up">
+            <div className="flex justify-between items-center px-6 py-5 border-b border-zinc-800 bg-[#1a1c23]/50">
+              <h2 className="text-lg font-black text-white font-poppins uppercase tracking-widest">Abertura de O.S.</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 p-2 bg-zinc-800/50 rounded-xl hover:bg-zinc-800 transition-colors"><X className="w-6 h-6" /></button>
+            </div>
+            <form onSubmit={handleCreateOS} className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Proprietário</label>
+                    <input required type="text" value={newClient} onChange={(e) => setNewClient(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Nome completo" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Placa</label>
+                    <input required type="text" value={newPlate} onChange={(e) => setNewPlate(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm uppercase focus:border-[#e62020] outline-none" placeholder="ABC1D23" maxLength={8} />
+                  </div>
                 </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Modelo da Moto</label>
+                  <input required type="text" list="motos-populares" value={newBike} onChange={(e) => setNewBike(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm focus:border-[#e62020] outline-none" placeholder="Ex: Hornet 600" />
+                  <datalist id="motos-populares">{POPULAR_BIKES.map((bike, i) => <option key={i} value={bike} />)}</datalist>
+                </div>
+                
                 {newBike.length > 2 && (
-                  <div className="w-full h-24 rounded-md overflow-hidden border border-zinc-800 relative">
-                    <img src={getBikeImage(newBike)} alt="Moto Selecionada" className="w-full h-full object-cover opacity-50 grayscale" />
+                  <div className="w-full h-32 rounded-2xl overflow-hidden border border-zinc-800 relative shadow-inner">
+                    <img src={getBikeImage(newBike)} alt="Moto Selecionada" className="w-full h-full object-cover opacity-30 grayscale hover:grayscale-0 transition-all duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#16181d] to-transparent"></div>
-                    <p className="absolute bottom-2 left-3 text-[10px] font-bold text-white uppercase tracking-wider">{newBike}</p>
+                    <div className="absolute bottom-4 left-4">
+                      <p className="text-[9px] font-black text-[#e62020] uppercase tracking-widest mb-1">Visualização Detectada</p>
+                      <p className="text-sm font-bold text-white uppercase tracking-wider">{newBike}</p>
+                    </div>
                   </div>
                 )}
-                <textarea required value={newIssue} onChange={(e) => setNewIssue(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm h-24 resize-none" placeholder="Descrição do problema" />
-                <div className="grid grid-cols-2 gap-3">
-                  <input required type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm [color-scheme:dark]" />
-                  <input type="number" value={newCost} onChange={(e) => setNewCost(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Valor Estimado" />
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Ocorrência / Sintomas</label>
+                  <textarea required value={newIssue} onChange={(e) => setNewIssue(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-4 text-white text-sm h-28 resize-none focus:border-[#e62020] outline-none leading-relaxed" placeholder="Descreva o que o cliente relatou ou o que foi diagnosticado..." />
                 </div>
-                <input type="text" value={newTech} onChange={(e) => setNewTech(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-md px-4 py-3 text-white text-sm" placeholder="Técnico Responsável" />
-                <button type="submit" className="w-full bg-gradient-to-b from-[#e62020] to-[#b31212] text-white py-4 rounded-md text-sm font-black uppercase tracking-wider shadow-lg">Salvar OS</button>
-              </form>
-            </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Previsão de Entrega</label>
+                    <input required type="date" value={newDeadline} onChange={(e) => setNewDeadline(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm [color-scheme:dark] outline-none focus:border-[#e62020]" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Orçamento (R$)</label>
+                    <input type="number" value={newCost} onChange={(e) => setNewCost(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-[#e62020]" placeholder="0,00" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-[10px] text-gray-500 font-bold uppercase ml-1">Mecânico Responsável</label>
+                  <input type="text" value={newTech} onChange={(e) => setNewTech(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-[#e62020]" placeholder="Nome do técnico" />
+                </div>
+              </div>
+              <button type="submit" className="w-full bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-5 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:brightness-110 active:scale-[0.98] transition-all mt-4">Confirmar e Registrar O.S.</button>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800;900&display=swap');
         .font-inter { font-family: 'Inter', sans-serif; }
         .font-poppins { font-family: 'Poppins', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; } 
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; } 
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
         .anim-fade { animation: fadeIn 0.3s ease-out forwards; }
-        .anim-slide-up { animation: slideUp(25px); animation-duration: 0.4s; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1); animation-fill-mode: forwards; }
+        .anim-slide-up { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .anim-slide-in-left { animation: slideInLeft 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .anim-backdrop { animation: backdropFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-        @keyframes backdropFade { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
+        @keyframes backdropFade { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(6px); } }
         .angled-badge { clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%); }
       `}} />
     </div>
@@ -624,10 +720,10 @@ export default function App() {
 
 function StatBox({ icon, title, value }) {
   return (
-    <div className="bg-[#1c1e26] border border-zinc-800 rounded-md p-2 flex flex-col items-center justify-center text-center h-24 shadow-inner">
-      <div className="text-gray-400 mb-1">{icon}</div>
-      <p className="text-[10px] text-gray-400 font-semibold leading-tight font-inter uppercase">{title}</p>
-      <h3 className="font-black text-white text-base font-poppins">{value}</h3>
+    <div className="bg-[#1c1e26]/60 backdrop-blur-md border border-zinc-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center h-28 shadow-xl transition-transform hover:scale-[1.02]">
+      <div className="text-[#e62020] mb-2">{icon}</div>
+      <p className="text-[9px] text-gray-500 font-black leading-tight font-inter uppercase tracking-wider">{title}</p>
+      <h3 className="font-black text-white text-lg font-poppins mt-1">{value}</h3>
     </div>
   );
 }
@@ -635,23 +731,30 @@ function StatBox({ icon, title, value }) {
 function ServiceCard({ service, getStatusStyle, onOpenDetails, onDelete }) {
   const styles = getStatusStyle(service.status);
   return (
-    <div className={`relative bg-gradient-to-r from-[#1c1e26] to-[#12141a] rounded-md overflow-hidden border border-zinc-800 shadow-md ${styles.border} border-l-4 group`}>
-      <div className="absolute inset-y-0 right-0 w-1/2 bg-cover opacity-30 grayscale z-0" style={{ backgroundImage: `url(${service.image})` }}></div>
+    <div className={`relative bg-gradient-to-br from-[#1c1e26] to-[#0a0b0d] rounded-2xl overflow-hidden border border-zinc-800/80 shadow-2xl ${styles.border} border-l-[6px] group transition-all hover:border-l-[#e62020] hover:shadow-[#000_0_20px_40px_-15px]`}>
+      <div className="absolute inset-y-0 right-0 w-3/4 bg-cover opacity-10 grayscale group-hover:opacity-20 group-hover:grayscale-0 transition-all duration-700 z-0" style={{ backgroundImage: `url(${service.image})` }}></div>
       <div className="absolute inset-0 bg-gradient-to-r from-[#1c1e26] via-[#1c1e26]/90 to-transparent z-0"></div>
-      <div className="relative z-10 p-4 flex flex-col h-full justify-between gap-3">
+      <div className="relative z-10 p-5 flex flex-col h-full justify-between gap-4">
         <div className="flex justify-between items-start gap-4">
-          <div>
-            <h3 className="font-bold text-white text-sm font-poppins leading-tight line-clamp-1">{service.issue}</h3>
-            <p className="text-[10px] text-gray-300 font-bold uppercase tracking-wide mt-1">{service.bike}</p>
+          <div className="flex-1">
+            <h3 className="font-black text-white text-sm font-poppins leading-tight line-clamp-2 uppercase tracking-tight group-hover:text-[#e62020] transition-colors">{service.issue}</h3>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{service.bike}</span>
+              <span className="w-1 h-1 bg-zinc-700 rounded-full"></span>
+              <span className="text-[10px] text-[#e62020] font-black">{service.plate}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {onDelete && <button onClick={() => onDelete(service.id)} className="bg-[#1c1e26] text-gray-400 hover:text-[#e62020] p-1.5 rounded border border-zinc-700 transition-colors"><Trash2 className="w-3 h-3" /></button>}
-            <button onClick={() => onOpenDetails(service)} className="bg-gradient-to-b from-[#e62020] to-[#b31212] text-white text-[9px] font-black uppercase px-2.5 py-1.5 rounded shadow-sm">Detalhes</button>
+          <div className="flex items-center gap-2 shrink-0">
+            {onDelete && <button onClick={() => onDelete(service.id)} className="bg-zinc-800/50 text-gray-500 hover:text-[#e62020] hover:bg-zinc-800 p-2 rounded-xl border border-zinc-700 transition-all active:scale-90"><Trash2 className="w-3.5 h-3.5" /></button>}
+            <button onClick={() => onOpenDetails(service)} className="bg-white text-black text-[9px] font-black uppercase px-3.5 py-2.5 rounded-xl shadow-lg hover:bg-[#e62020] hover:text-white transition-all active:scale-95">Gerenciar</button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`px-2 py-0.5 text-[9px] font-bold uppercase angled-badge pr-4 ${styles.badge}`}>{service.status}</span>
-          <span className="text-[10px] text-white font-medium">Prazo: {service.deadline}</span>
+        <div className="flex items-center justify-between border-t border-zinc-800/50 pt-3 mt-2">
+          <span className={`px-3 py-1 text-[8px] font-black uppercase angled-badge pr-5 ${styles.badge} shadow-md`}>{service.status}</span>
+          <div className="flex flex-col text-right">
+            <span className="text-[8px] text-gray-500 font-bold uppercase">Prazo de Entrega</span>
+            <span className="text-[10px] text-white font-black">{service.deadline}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -660,9 +763,12 @@ function ServiceCard({ service, getStatusStyle, onOpenDetails, onDelete }) {
 
 function SideMenuItem({ icon, label, isActive, onClick }) {
   return (
-    <button onClick={onClick} className={`flex items-center gap-4 px-4 py-3.5 rounded-lg transition-colors w-full text-left ${isActive ? 'bg-gradient-to-r from-[#e62020]/20 to-transparent text-white border-l-2 border-[#e62020]' : 'text-gray-400 border-l-2 border-transparent hover:bg-zinc-800/50'}`}>
-      {React.cloneElement(icon, { className: 'w-5 h-5' })}
-      <span className="font-medium font-poppins text-sm uppercase tracking-wide">{label}</span>
+    <button onClick={onClick} className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all w-full text-left group ${isActive ? 'bg-gradient-to-r from-[#e62020] to-[#b31212] text-white shadow-xl shadow-[#e62020]/20' : 'text-gray-500 hover:bg-zinc-800/30 hover:text-gray-300'}`}>
+      <div className={`${isActive ? 'text-white' : 'text-zinc-600 group-hover:text-[#e62020]'} transition-colors`}>
+        {React.cloneElement(icon, { className: 'w-5 h-5' })}
+      </div>
+      <span className="font-black font-poppins text-xs uppercase tracking-widest">{label}</span>
+      {isActive && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>}
     </button>
   );
 }

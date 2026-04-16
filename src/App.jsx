@@ -247,6 +247,19 @@ export default function App() {
       }
     };
     fetchProfile();
+
+    const fetchTransactions = async () => {
+      const safeId = getSafeUserId(session.user.id);
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('user_id', safeId)
+        .order('created_at', { ascending: false });
+      if (!error && data) {
+        setTransactions(data);
+      }
+    };
+    fetchTransactions();
   }, [supabase, session]);
 
   const [newClient, setNewClient] = useState('');
@@ -285,10 +298,12 @@ export default function App() {
 
   const contasAPagar = transactions.filter(t => t.type === 'saida' && t.status === 'Pendente');
 
-  const handleCreateFinance = (e) => {
+  const handleCreateFinance = async (e) => {
     e.preventDefault();
+    const safeId = getSafeUserId(session.user.id);
     const newTrans = {
       id: generateUUID(),
+      user_id: safeId,
       type: finType,
       osId: finType === 'entrada' ? finOsId : null,
       category: finCategory,
@@ -302,6 +317,15 @@ export default function App() {
     setTransactions([newTrans, ...transactions]);
     setIsFinanceModalOpen(false);
     setFinValue(''); setFinDate(''); setFinDesc(''); setFinOsId('');
+    
+    if (supabase) {
+      const { error } = await supabase.from('transactions').insert([newTrans]);
+      if (error) {
+        console.error("Erro ao salvar financeiro:", error);
+        setAuthError(`Erro no Financeiro: ${error.message} (Verifique RLS no Supabase)`);
+        setTransactions(prev => prev.filter(t => t.id !== newTrans.id));
+      }
+    }
   };
 
   const handleCreateOS = async (e) => {
@@ -365,27 +389,34 @@ export default function App() {
     if (newStatus === 'Finalizado' || newStatus === 'Entregue') {
       const os = services.find(s => s.id === id);
       if (os && os.cost > 0) {
-        setTransactions(prevTransactions => {
-          const paidAmount = prevTransactions.filter(t => t.type === 'entrada' && t.osId === id && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
-          const pendingAmount = os.cost - paidAmount;
+        const paidAmount = transactions.filter(t => t.type === 'entrada' && t.osId === id && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
+        const pendingAmount = os.cost - paidAmount;
+        
+        if (pendingAmount > 0) {
+          const safeId = getSafeUserId(session.user.id);
+          const newTrans = {
+            id: generateUUID(),
+            user_id: safeId,
+            type: 'entrada',
+            osId: id,
+            category: 'Mão de obra',
+            status: 'Pago',
+            method: 'PIX',
+            value: pendingAmount,
+            date: new Date().toISOString().split('T')[0],
+            desc: `OS Encerrada - ${os.bike}`,
+            created_at: new Date().toISOString()
+          };
+          setTransactions(prevTransactions => [newTrans, ...prevTransactions]);
           
-          if (pendingAmount > 0) {
-            const newTrans = {
-              id: generateUUID(),
-              type: 'entrada',
-              osId: id,
-              category: 'Mão de obra',
-              status: 'Pago',
-              method: 'PIX',
-              value: pendingAmount,
-              date: new Date().toISOString().split('T')[0],
-              desc: `OS Encerrada - ${os.bike}`,
-              created_at: new Date().toISOString()
-            };
-            return [newTrans, ...prevTransactions];
+          if (supabase) {
+            const { error } = await supabase.from('transactions').insert([newTrans]);
+            if (error) {
+              console.error("Erro ao criar entrada automática:", error);
+              setAuthError(`Erro automático do financeiro: ${error.message}`);
+            }
           }
-          return prevTransactions;
-        });
+        }
       }
     }
 
@@ -640,7 +671,7 @@ export default function App() {
                               <p className="text-[9px] text-[#e62020] font-black uppercase tracking-widest mb-1">O.S. Atrasada</p>
                               <p className="text-xs text-white font-bold truncate">{s.bike}</p>
                               <p className="text-[10px] text-gray-400 mt-0.5 truncate">{s.client}</p>
-                              <p className="text-[9px] text-gray-500 mt-1.5 italic">Previsão: {s.deadline}</p>
+                              <p className="text-[9px] text-gray-500 mt-1.5 italic">Entrada: {new Date(s.created_at).toLocaleDateString('pt-BR')}</p>
                             </div>
                           ))
                         ) : (

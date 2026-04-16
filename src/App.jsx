@@ -7,6 +7,7 @@ import {
   X, 
   Search,
   ChevronRight,
+  ChevronLeft,
   Bell, 
   Home, 
   ClipboardList, 
@@ -24,7 +25,12 @@ import {
   Phone, 
   MapPin, 
   FileText, 
-  Eye
+  Eye,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Activity,
+  Receipt
 } from 'lucide-react';
 
 const SUPABASE_URL = 'https://jwhpbtuavifcfywsrrfx.supabase.co';
@@ -109,6 +115,35 @@ export default function App() {
   const [profileAddress, setProfileAddress] = useState('Av. Principal, 1000');
   const [profileLogo, setProfileLogo] = useState('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100&h=100');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Finance states
+  const [transactions, setTransactions] = useState([]);
+  const [financeSubTab, setFinanceSubTab] = useState('fluxo'); // fluxo, receber, pagar
+  const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
+  const [finType, setFinType] = useState('entrada'); // entrada, saida
+  const [finOsId, setFinOsId] = useState('');
+  const [finCategory, setFinCategory] = useState('Mão de obra');
+  const [finStatus, setFinStatus] = useState('Pago'); // Pago, Pendente, Parcial
+  const [finMethod, setFinMethod] = useState('PIX'); // PIX, Dinheiro, Cartão
+  const [finValue, setFinValue] = useState('');
+  const [finDate, setFinDate] = useState('');
+  const [finDesc, setFinDesc] = useState('');
+
+  // Agenda states
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // Notificações state
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+
+  const nextMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  const prevMonth = () => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+  const startDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const calendarBlanks = Array.from({ length: startDay }, (_, i) => i);
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     // Configurações para Atalho (PWA/Mobile)
@@ -227,14 +262,47 @@ export default function App() {
   const scheduledCount = services.filter(s => s.status === 'Agendado').length;
   const productionCount = services.filter(s => !['Agendado', 'Finalizado', 'Entregue'].includes(s.status)).length; 
 
-  const delayedCount = services.filter(s => {
+  const delayedServices = services.filter(s => {
     if (['Finalizado', 'Entregue'].includes(s.status)) return false;
     if (!s.deadline_raw) return false;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const deadlineDate = new Date(s.deadline_raw);
     return deadlineDate < today;
-  }).length;
+  });
+  const delayedCount = delayedServices.length;
+
+  // Calculos Financeiros
+  const financeIncome = transactions.filter(t => t.type === 'entrada' && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
+  const financeExpense = transactions.filter(t => t.type === 'saida' && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
+  const financeProfit = financeIncome - financeExpense;
+  const ticketMedio = services.length > 0 ? (services.reduce((acc, s) => acc + (s.cost || 0), 0) / services.length) : 0;
+  
+  const contasAReceber = services.map(os => {
+    const paidAmount = transactions.filter(t => t.type === 'entrada' && t.osId === os.id && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
+    return { ...os, paidAmount, pendingAmount: (os.cost || 0) - paidAmount };
+  }).filter(os => os.pendingAmount > 0 && os.cost > 0);
+
+  const contasAPagar = transactions.filter(t => t.type === 'saida' && t.status === 'Pendente');
+
+  const handleCreateFinance = (e) => {
+    e.preventDefault();
+    const newTrans = {
+      id: generateUUID(),
+      type: finType,
+      osId: finType === 'entrada' ? finOsId : null,
+      category: finCategory,
+      status: finStatus,
+      method: finStatus !== 'Pendente' ? finMethod : null,
+      value: parseFloat(finValue),
+      date: finDate,
+      desc: finType === 'saida' ? finDesc : (services.find(s => s.id === finOsId)?.bike || 'Receita Diversa'),
+      created_at: new Date().toISOString()
+    };
+    setTransactions([newTrans, ...transactions]);
+    setIsFinanceModalOpen(false);
+    setFinValue(''); setFinDate(''); setFinDesc(''); setFinOsId('');
+  };
 
   const handleCreateOS = async (e) => {
     e.preventDefault();
@@ -292,6 +360,35 @@ export default function App() {
     if (selectedService && selectedService.id === id) {
       setSelectedService({ ...selectedService, status: newStatus });
     }
+
+    // Sincronizar OS encerrada com o financeiro
+    if (newStatus === 'Finalizado' || newStatus === 'Entregue') {
+      const os = services.find(s => s.id === id);
+      if (os && os.cost > 0) {
+        setTransactions(prevTransactions => {
+          const paidAmount = prevTransactions.filter(t => t.type === 'entrada' && t.osId === id && t.status !== 'Pendente').reduce((acc, t) => acc + t.value, 0);
+          const pendingAmount = os.cost - paidAmount;
+          
+          if (pendingAmount > 0) {
+            const newTrans = {
+              id: generateUUID(),
+              type: 'entrada',
+              osId: id,
+              category: 'Mão de obra',
+              status: 'Pago',
+              method: 'PIX',
+              value: pendingAmount,
+              date: new Date().toISOString().split('T')[0],
+              desc: `OS Encerrada - ${os.bike}`,
+              created_at: new Date().toISOString()
+            };
+            return [newTrans, ...prevTransactions];
+          }
+          return prevTransactions;
+        });
+      }
+    }
+
     if (supabase) {
       const { error } = await supabase.from('services').update({ status: newStatus }).eq('id', id);
       if (error) {
@@ -498,7 +595,9 @@ export default function App() {
           </div>
           <div className="flex flex-col py-6 gap-2.5 px-3 flex-1 overflow-y-auto custom-scrollbar">
             <SideMenuItem icon={<Home />} label="Início" isActive={activeTab === 'inicio'} onClick={() => setActiveTab('inicio')} />
+            <SideMenuItem icon={<Calendar />} label="Agenda" isActive={activeTab === 'agenda'} onClick={() => setActiveTab('agenda')} />
             <SideMenuItem icon={<ClipboardList />} label="Ordens de Serviço" isActive={activeTab === 'ordens'} onClick={() => setActiveTab('ordens')} />
+            <SideMenuItem icon={<Wallet />} label="Financeiro" isActive={activeTab === 'financeiro'} onClick={() => setActiveTab('financeiro')} />
             <SideMenuItem icon={<Store />} label="Configurações da Loja" isActive={activeTab === 'perfil'} onClick={() => setActiveTab('perfil')} />
           </div>
           <div className="p-5 border-t border-zinc-800 bg-black/20">
@@ -521,11 +620,36 @@ export default function App() {
               <div className="text-right flex items-center gap-2.5">
                 <p className="hidden sm:block text-gray-300 text-xs font-medium">Oficina: <strong className="text-white">{profileName}</strong></p>
                 <div className="relative">
-                  <Bell className="w-4 h-4 text-gray-300" />
-                  {delayedCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-[#e62020] text-white text-[8px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border border-[#0f1115] animate-pulse">
-                      {delayedCount}
-                    </span>
+                  <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="relative flex items-center justify-center focus:outline-none">
+                    <Bell className="w-4 h-4 text-gray-300 hover:text-white transition-colors" />
+                    {delayedCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 bg-[#e62020] text-white text-[8px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full border border-[#0f1115] animate-pulse">
+                        {delayedCount}
+                      </span>
+                    )}
+                  </button>
+                  {isNotificationsOpen && (
+                    <div className="absolute right-0 mt-3 w-64 bg-[#16181d] border border-zinc-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] z-50 overflow-hidden anim-fade text-left">
+                      <div className="px-4 py-3 border-b border-zinc-800 bg-[#1a1c23]">
+                        <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                        {delayedServices.length > 0 ? (
+                          delayedServices.map(s => (
+                            <div key={s.id} onClick={() => { setSelectedService(s); setIsNotificationsOpen(false); }} className="px-4 py-3 hover:bg-zinc-800/50 cursor-pointer border-b border-zinc-800/50 last:border-0 transition-colors">
+                              <p className="text-[9px] text-[#e62020] font-black uppercase tracking-widest mb-1">O.S. Atrasada</p>
+                              <p className="text-xs text-white font-bold truncate">{s.bike}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5 truncate">{s.client}</p>
+                              <p className="text-[9px] text-gray-500 mt-1.5 italic">Previsão: {s.deadline}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-6 text-center text-[10px] text-gray-500 italic">
+                            Sem notificações no momento.
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -629,6 +753,140 @@ export default function App() {
               </div>
             )}
 
+            {activeTab === 'agenda' && (
+              <div className="p-5 anim-slide-up lg:py-8 lg:px-0">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Agenda</h2>
+                  <div className="flex items-center gap-4">
+                    <button onClick={prevMonth} className="text-gray-400 hover:text-[#e62020] transition-colors p-1"><ChevronLeft className="w-5 h-5"/></button>
+                    <span className="text-white font-black uppercase text-sm tracking-widest min-w-[140px] text-center">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                    <button onClick={nextMonth} className="text-gray-400 hover:text-[#e62020] transition-colors p-1"><ChevronRight className="w-5 h-5"/></button>
+                  </div>
+                </div>
+                <div className="bg-[#1c1e26]/50 border border-zinc-800/50 rounded-xl p-4 shadow-xl">
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2 text-center mb-2">
+                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(d => <div key={d} className="text-gray-500 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">{d}</div>)}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                    {calendarBlanks.map(b => <div key={`blank-${b}`} className="min-h-[70px] sm:min-h-[100px] p-2 bg-[#0f1115]/30 rounded-lg border border-zinc-800/20"></div>)}
+                    {calendarDays.map(day => {
+                      const dateStr = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      const dayServices = services.filter(s => s.deadline_raw === dateStr);
+                      const isToday = todayStr === dateStr;
+
+                      return (
+                        <div key={day} className={`min-h-[70px] sm:min-h-[100px] p-1.5 sm:p-2 rounded-lg border transition-colors ${isToday ? 'border-[#e62020] bg-[#e62020]/10 shadow-[inset_0_0_15px_rgba(230,32,32,0.1)]' : 'border-zinc-800/80 bg-[#0f1115] hover:border-zinc-600'} flex flex-col`}>
+                          <span className={`text-[9px] sm:text-[11px] font-black ${isToday ? 'text-[#e62020]' : 'text-gray-400'} mb-1.5 block`}>{day}</span>
+                          <div className="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1.5">
+                            {dayServices.map(s => (
+                              <div key={s.id} onClick={() => setSelectedService(s)} className="cursor-pointer bg-[#1a1c23] hover:bg-zinc-800 p-1.5 rounded-md text-[8px] sm:text-[9px] font-medium text-gray-300 truncate border-l-2 border-[#e62020] shadow-sm transition-colors" title={`${s.bike} - ${s.client}`}>
+                                {s.bike}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'financeiro' && (
+              <div className="p-5 anim-slide-up lg:py-8 lg:px-0">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins">Financeiro</h2>
+                  <button onClick={() => setIsFinanceModalOpen(true)} className="bg-[#e62020] text-white text-[9px] sm:text-xs font-black uppercase px-4 py-2 rounded-lg shadow-lg hover:bg-[#ff2b2b] transition-all">Nova Movimentação</button>
+                </div>
+                
+                {/* 6. Resumo Financeiro */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+                  <StatBox icon={<ArrowUpRight className="w-4 h-4" />} title="Faturamento" value={`R$ ${financeIncome.toFixed(2)}`} />
+                  <StatBox icon={<ArrowDownRight className="w-4 h-4" />} title="Despesas" value={`R$ ${financeExpense.toFixed(2)}`} />
+                  <StatBox icon={<DollarSign className="w-4 h-4" />} title="Lucro Líquido" value={`R$ ${financeProfit.toFixed(2)}`} />
+                  <StatBox icon={<Activity className="w-4 h-4" />} title="Ticket Médio" value={`R$ ${ticketMedio.toFixed(2)}`} />
+                </div>
+
+                {/* Abas Internas */}
+                <div className="flex gap-2 bg-[#1a1c23] p-1.5 rounded-xl mb-5 overflow-x-auto custom-scrollbar border border-zinc-800/50">
+                  {['fluxo', 'receber', 'pagar'].map((tab) => (
+                    <button key={tab} onClick={() => setFinanceSubTab(tab)} className={`flex-1 min-w-[100px] text-[10px] font-black uppercase py-2.5 rounded-lg transition-all ${financeSubTab === tab ? 'bg-[#e62020] text-white shadow-md' : 'text-gray-500 hover:text-white hover:bg-zinc-800'}`}>
+                      {tab === 'fluxo' ? '3. Fluxo de Caixa' : tab === 'receber' ? '4. A Receber' : '5. A Pagar'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="bg-[#1c1e26]/50 border border-zinc-800/50 rounded-xl p-4">
+                  {/* 3. Fluxo de Caixa */}
+                  {financeSubTab === 'fluxo' && (
+                    <div className="space-y-3">
+                      {transactions.length > 0 ? transactions.map(t => (
+                        <div key={t.id} className="flex justify-between items-center bg-[#0f1115] p-3.5 rounded-lg border border-zinc-800/80 hover:border-[#e62020]/50 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-full ${t.type === 'entrada' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                              {t.type === 'entrada' ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+                            </div>
+                            <div>
+                              <p className="text-white text-xs font-bold uppercase">{t.desc}</p>
+                              <p className="text-zinc-500 text-[9px] font-semibold mt-0.5">{t.date} • {t.category} • {t.method || 'S/M'}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className={`text-sm font-black ${t.type === 'entrada' ? 'text-green-500' : 'text-red-500'}`}>
+                              {t.type === 'entrada' ? '+' : '-'} R$ {t.value.toFixed(2)}
+                            </p>
+                            <span className={`text-[7px] font-bold uppercase px-2 py-0.5 rounded-md mt-1 inline-block ${t.status === 'Pago' ? 'bg-green-500/20 text-green-400' : t.status === 'Parcial' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-zinc-700 text-zinc-300'}`}>{t.status}</span>
+                          </div>
+                        </div>
+                      )) : <p className="text-center text-zinc-500 text-xs py-6">Nenhuma movimentação registrada.</p>}
+                    </div>
+                  )}
+
+                  {/* 4. Contas a Receber */}
+                  {financeSubTab === 'receber' && (
+                    <div className="space-y-3">
+                      {contasAReceber.length > 0 ? contasAReceber.map(os => (
+                        <div key={os.id} className="flex justify-between items-center bg-[#0f1115] p-3.5 rounded-lg border border-zinc-800/80">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-blue-500/10 text-blue-500"><Receipt className="w-4 h-4" /></div>
+                            <div>
+                              <p className="text-white text-xs font-bold uppercase">OS: {os.bike}</p>
+                              <p className="text-zinc-500 text-[9px] font-semibold mt-0.5">Cliente: {os.client} • Previsão: {os.deadline}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-black text-white">Restante: R$ {os.pendingAmount.toFixed(2)}</p>
+                            <p className="text-[8px] text-zinc-500 font-bold mt-0.5">Total: R$ {(os.cost || 0).toFixed(2)}</p>
+                          </div>
+                        </div>
+                      )) : <p className="text-center text-zinc-500 text-xs py-6">Nenhuma OS pendente de recebimento.</p>}
+                    </div>
+                  )}
+
+                  {/* 5. Contas a Pagar */}
+                  {financeSubTab === 'pagar' && (
+                    <div className="space-y-3">
+                      {contasAPagar.length > 0 ? contasAPagar.map(t => (
+                        <div key={t.id} className="flex justify-between items-center bg-[#0f1115] p-3.5 rounded-lg border border-zinc-800/80">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full bg-orange-500/10 text-orange-500"><Calendar className="w-4 h-4" /></div>
+                            <div>
+                              <p className="text-white text-xs font-bold uppercase">{t.desc}</p>
+                              <p className="text-zinc-500 text-[9px] font-semibold mt-0.5">Vencimento: {t.date} • {t.category}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-black text-red-500">R$ {t.value.toFixed(2)}</p>
+                            <span className="text-[7px] font-bold uppercase px-2 py-0.5 rounded-md mt-1 inline-block bg-orange-500/20 text-orange-400">Pendente</span>
+                          </div>
+                        </div>
+                      )) : <p className="text-center text-zinc-500 text-xs py-6">Nenhuma conta a pagar registrada.</p>}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'perfil' && (
               <div className="p-5 anim-slide-up lg:py-8 lg:px-0 max-w-4xl">
                 <h2 className="text-lg font-black text-white uppercase tracking-wide font-poppins mb-6">Oficina</h2>
@@ -693,7 +951,9 @@ export default function App() {
             </div>
             <div className="flex flex-col py-5 gap-2.5 px-3 flex-1 overflow-y-auto">
               <SideMenuItem icon={<Home />} label="Início" isActive={activeTab === 'inicio'} onClick={() => { setActiveTab('inicio'); setIsMenuOpen(false); }} />
+              <SideMenuItem icon={<Calendar />} label="Agenda" isActive={activeTab === 'agenda'} onClick={() => { setActiveTab('agenda'); setIsMenuOpen(false); }} />
               <SideMenuItem icon={<ClipboardList />} label="Ordens de Serviço" isActive={activeTab === 'ordens'} onClick={() => { setActiveTab('ordens'); setIsMenuOpen(false); }} />
+              <SideMenuItem icon={<Wallet />} label="Financeiro" isActive={activeTab === 'financeiro'} onClick={() => { setActiveTab('financeiro'); setIsMenuOpen(false); }} />
               <SideMenuItem icon={<Store />} label="Configurações" isActive={activeTab === 'perfil'} onClick={() => { setActiveTab('perfil'); setIsMenuOpen(false); }} />
             </div>
             <div className="p-5 border-t border-zinc-800 bg-black/20">
@@ -754,6 +1014,82 @@ export default function App() {
                 <button onClick={() => setSelectedService(null)} className="w-full bg-zinc-800 text-white py-3 rounded-lg font-black uppercase text-[9px] tracking-widest hover:bg-zinc-700 transition-colors">Voltar</button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL FINANCEIRO */}
+      {isFinanceModalOpen && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center z-50 anim-backdrop p-0 sm:p-4">
+          <div className="bg-[#16181d] rounded-t-3xl sm:rounded-3xl w-full sm:max-w-[400px] shadow-2xl overflow-hidden border border-zinc-800 flex flex-col max-h-[95vh] anim-slide-up">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-800 bg-[#1a1c23]/50">
+              <h2 className="text-base font-black text-white font-poppins uppercase tracking-widest">Movimentação</h2>
+              <button onClick={() => setIsFinanceModalOpen(false)} className="text-gray-400 p-1.5 bg-zinc-800/50 rounded-lg hover:bg-zinc-800 transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <form onSubmit={handleCreateFinance} className="p-5 space-y-4 overflow-y-auto custom-scrollbar">
+              <div className="flex gap-2 p-1 bg-[#0f1115] border border-zinc-800 rounded-lg">
+                <button type="button" onClick={() => setFinType('entrada')} className={`flex-1 text-[10px] font-black uppercase py-2 rounded-md transition-colors ${finType === 'entrada' ? 'bg-green-600 text-white' : 'text-zinc-500 hover:text-white'}`}>1. Entrada</button>
+                <button type="button" onClick={() => setFinType('saida')} className={`flex-1 text-[10px] font-black uppercase py-2 rounded-md transition-colors ${finType === 'saida' ? 'bg-red-600 text-white' : 'text-zinc-500 hover:text-white'}`}>2. Saída</button>
+              </div>
+
+              {finType === 'entrada' ? (
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Vincular a OS</label>
+                  <select required value={finOsId} onChange={(e) => setFinOsId(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs focus:border-[#e62020] outline-none">
+                    <option value="" disabled>Selecione uma O.S.</option>
+                    {services.map(s => <option key={s.id} value={s.id}>{s.bike} - {s.client}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Descrição / Fornecedor</label>
+                  <input required type="text" value={finDesc} onChange={(e) => setFinDesc(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs focus:border-[#e62020] outline-none" placeholder="Ex: Compra de Óleo" />
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Categoria</label>
+                  <select value={finCategory} onChange={(e) => setFinCategory(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs focus:border-[#e62020] outline-none">
+                    {finType === 'entrada' ? (
+                      <><option>Mão de obra</option><option>Peças</option><option>Outros</option></>
+                    ) : (
+                      <><option>Fornecedores</option><option>Custos Fixos</option><option>Ferramentas</option></>
+                    )}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Valor</label>
+                  <input required type="number" step="0.01" value={finValue} onChange={(e) => setFinValue(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs outline-none focus:border-[#e62020]" placeholder="0,00" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Data</label>
+                  <input required type="date" value={finDate} onChange={(e) => setFinDate(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs [color-scheme:dark] outline-none focus:border-[#e62020]" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Status</label>
+                  <select value={finStatus} onChange={(e) => setFinStatus(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs focus:border-[#e62020] outline-none">
+                    <option>Pago</option><option>Pendente</option><option>Parcial</option>
+                  </select>
+                </div>
+              </div>
+
+              {finStatus !== 'Pendente' && (
+                <div className="space-y-1">
+                  <label className="text-[9px] text-gray-500 font-bold uppercase ml-1">Forma de Pagamento</label>
+                  <select value={finMethod} onChange={(e) => setFinMethod(e.target.value)} className="w-full bg-[#0f1115] border border-zinc-800 rounded-lg px-3 py-2.5 text-white text-xs focus:border-[#e62020] outline-none">
+                    <option>PIX</option><option>Dinheiro</option><option>Cartão de Crédito</option><option>Cartão de Débito</option>
+                  </select>
+                </div>
+              )}
+
+              <button type="submit" className="w-full bg-gradient-to-r from-[#e62020] to-[#b31212] text-white py-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all mt-4 mb-1">
+                Registrar
+              </button>
+            </form>
           </div>
         </div>
       )}
